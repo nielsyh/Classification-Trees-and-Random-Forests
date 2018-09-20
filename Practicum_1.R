@@ -18,7 +18,7 @@ impurity <- function(data = c()) {
   class_zero <- length(data[data == 0])
   class_uno <- length(data[data == 1])
   res <- (class_zero/l) * (class_uno/l)
-  res
+  return(res)
 }
 
 #calcualtes reduction with the gini-index. 
@@ -27,31 +27,29 @@ impurity_reduction <- function(orig = c(), uno = c(), dos=c()){
   l_uno <- length(uno)
   l_dos <- length(dos)
   res <- impurity(orig) - ( (l_uno/l)*impurity(uno) + (l_dos/l)*impurity(dos) )
-  res
+  return(res)
 }
 
 #returns bestsplit, tested on income.
 bestsplit <-function(num_data = c(), class_data = c()){
   num_sorted <- sort(unique(num_data))
+  
   splitpoints <- (num_sorted[1:(length(num_sorted) - 1)]+num_sorted[2:length(num_sorted)])/2
   
   orig <- impurity(class_data)
   
+
   best <- 0
   val <- 0
   
   for (i in splitpoints){
-    
-    #print(i)
     res <- impurity_reduction(class_data, class_data[num_data > i], class_data[num_data <= i])
-    #print(res)
     if(res > val){
-      #print('new best')
       val <- res
       best <- i
     }
   }
-  best
+  return(best)
   
 }
 
@@ -117,47 +115,61 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = ncol(data)) {
   # Create the tree's root node.
   root <- create.node(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
   tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
-  
+  return(tree)
 }
 
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   
   node.data <- node$y
   
-  if(is.null(node.data)){stop('no data')}
+  tmp <- impurity(node.data[,ncol(node.data)])
+
+  if(is.null(node.data)){
+    print('no data')
+    return(node)
+  }
   if(nrow(node.data) <= nmin){
     print('should be leaf?')
+    return(node)
   }
-  if(impurity(node.data) == 0){stop('Leaf because pure')}
+  if(impurity(node.data[,ncol(node.data)]) == 0){
+    print('Leaf because pure')
+    return(node)
+    }
   
   if(nrow(node.data) <= minleaf){
     print('no valid split')
+    return(node)
   }
   
   
   # FIND BEST ROW WITH BEST IMPUR REDUCTION FOR ALL POSSIBLE SPLITS
   
   split.row <- NULL
-  split.value <- 0
+  split.value <- NULL
   reduction.max <- 0
   
   #skip first and last column
   for(row in 1:(ncol(node.data)-1)){
-    #print(data[,row])
-    #print(bestsplit(data[,row], data[,ncol(data)]))
-    bs <- bestsplit(node.data[,row], node.data[,ncol(node.data)])
-    #print(impurity_reduction(data[,ncol(data)],  data[,ncol(data)][data[,row]>bs],  data[,ncol(data)][data[,row]<=bs] ))
-    
-    reduction.total <- impurity_reduction(node.data[,ncol(node.data)],  node.data[,ncol(node.data)][node.data[,row]>bs],  node.data[,ncol(node.data)][node.data[,row]<=bs] )
-    
-    if(reduction.total > reduction.max){
-      reduction.max <- reduction.total
-      split.row <- row
-      split.value <- bs
+    #only split when there is more then 1 unique data value
+    if(unique(node.data[,row]) > 1){
+      #split
+      bs <- bestsplit(node.data[,row], node.data[,ncol(node.data)])
+      #get reduction on this split
+      reduction.total <- impurity_reduction(node.data[,ncol(node.data)],  node.data[,ncol(node.data)][node.data[,row]>bs],  node.data[,ncol(node.data)][node.data[,row]<=bs] )
+      #check if this split is the best until now, if yes -> remember the split.
+      if(reduction.total > reduction.max){
+        reduction.max <- reduction.total
+        split.row <- row
+        split.value <- bs
+      }
     }
   }
-  ### END PUT THESE IN NODES
-  
+
+  if(is.null(split.value)){
+    print('no split possible, return node')
+    return(node)
+  }
   
   leftChild <- create.node(node.label = 1, node.type = "left", node.val = split.value, y = node.data[node.data[,split.row] <= split.value,])
   rightChild <- create.node(node.label = 1, node.type = "right", node.val = split.value, y = node.data[node.data[,split.row] > split.value,])
@@ -169,9 +181,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   node$AddChildNode(leftChild)
   node$AddChildNode(rightChild)
   
-  
-  
-  #print(node)
+  return(node)
 }
 
 create.node <- function (node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
