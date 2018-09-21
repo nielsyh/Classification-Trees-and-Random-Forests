@@ -77,7 +77,7 @@ node.create <- function (node.label = "", node.type = "left", type = "binary", n
 
 #TODO add nfeat implementation
 #Required tree.grow function
-tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = ncol(data)) {
+tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1 ) {
   # Sanity checks
   if (is.null(data)){
     stop("Feature table cannot be empty or null")
@@ -98,7 +98,12 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = ncol(data)) {
   if (nfeat > ncol(data)) {
     stop("Cannot take a sample larger than the population.")
   }
-
+  
+  if(nfeat < (ncol(data) - 1)){
+    sample <- cbind(data[, sample.random.columns(data[-(ncol(data))],nfeat), drop = FALSE], class=data[,ncol(data)])
+    data <- sample
+  }
+  
   # Create the tree's root node.
   root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
   tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
@@ -136,6 +141,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   split.value <- NULL
   reduction.max <- 0
   
+  #todo add minleaf requirement
   #skip first and last column
   for(row in 1:(ncol(node.data)-1)){
     #only split when there is more then 1 unique data value
@@ -171,6 +177,25 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   node$AddChildNode(rightChild)
   
   return(node)
+}
+
+#PAVLOS function to get random indexes
+sample.random.columns <- function(X, n) {
+  if (n == ncol(X)){
+    return (sort(c(1:ncol(X)), decreasing = FALSE))
+  }
+  return (sort(c(sample(1:ncol(X), n, replace=F)), decreasing = FALSE))
+}
+
+#Input column x with tree object
+#funciton returns y which is the result of classifing x with attached tree obj.
+tree.classify <- function(x = c(), tr = NULL){
+  y <- 0
+  
+  
+
+  return(y)
+  
 }
 
 
