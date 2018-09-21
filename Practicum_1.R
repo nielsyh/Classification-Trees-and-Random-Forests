@@ -3,12 +3,8 @@ if (!require("data.tree")){
   library(data.tree)
 }
 
-if (!require("ISLR")){
-  install.packages("ISLR", dependencies = TRUE)
-  library(ISLR)
-}
 
-
+#fake data input
 data <- read.csv("C:/dm/credit.txt")
 
 
@@ -33,12 +29,8 @@ impurity_reduction <- function(orig = c(), uno = c(), dos=c()){
 #returns bestsplit, tested on income.
 bestsplit <-function(num_data = c(), class_data = c()){
   num_sorted <- sort(unique(num_data))
-  
   splitpoints <- (num_sorted[1:(length(num_sorted) - 1)]+num_sorted[2:length(num_sorted)])/2
-  
   orig <- impurity(class_data)
-  
-
   best <- 0
   val <- 0
   
@@ -50,10 +42,10 @@ bestsplit <-function(num_data = c(), class_data = c()){
     }
   }
   return(best)
-  
 }
 
-create.node <- function (node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
+#function to create a node
+node.create <- function (node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
   # Error checking
   if (type != "binary" && type != "numerical"){
     stop("Node can either be binary or numerical!")
@@ -83,7 +75,8 @@ create.node <- function (node.label = "", node.type = "left", type = "binary", n
   return (node)
 }
 
-
+#TODO add nfeat implementation
+#Required tree.grow function
 tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = ncol(data)) {
   # Sanity checks
   if (is.null(data)){
@@ -105,19 +98,14 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = ncol(data)) {
   if (nfeat > ncol(data)) {
     stop("Cannot take a sample larger than the population.")
   }
-  
-  # Get a vector of features to consider for a split
-  #features.to.consider <- sample.random.columns(x, nfeat)
-  # Create a subset of the data
-  #subsetted.data.x <- x[, features.to.consider, drop = FALSE]
-  
-  
+
   # Create the tree's root node.
-  root <- create.node(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
+  root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
   tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
   return(tree)
 }
 
+#recursive function to build a tree.
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   
   node.data <- node$y
@@ -128,7 +116,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
     print('no data')
     return(node)
   }
-  if(nrow(node.data) <= nmin){
+  if(nrow(node.data) < nmin){
     print('should be leaf?')
     return(node)
   }
@@ -137,11 +125,10 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
     return(node)
     }
   
-  if(nrow(node.data) <= minleaf){
+  if(nrow(node.data) < minleaf){
     print('no valid split')
     return(node)
   }
-  
   
   # FIND BEST ROW WITH BEST IMPUR REDUCTION FOR ALL POSSIBLE SPLITS
   
@@ -165,54 +152,25 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
       }
     }
   }
-
+  #check if found split.
   if(is.null(split.value)){
     print('no split possible, return node')
     return(node)
   }
   
-  leftChild <- create.node(node.label = 1, node.type = "left", node.val = split.value, y = node.data[node.data[,split.row] <= split.value,])
-  rightChild <- create.node(node.label = 1, node.type = "right", node.val = split.value, y = node.data[node.data[,split.row] > split.value,])
+  #make right and left children
+  leftChild <- node.create(node.label = 1, node.type = "left", node.val = split.value, y = node.data[node.data[,split.row] <= split.value,])
+  rightChild <- node.create(node.label = 1, node.type = "right", node.val = split.value, y = node.data[node.data[,split.row] > split.value,])
   
   #recurse
   tree.grow.rec(leftChild,nmin, minleaf)
   tree.grow.rec(rightChild,nmin, minleaf)
   
+  #add children to parent
   node$AddChildNode(leftChild)
   node$AddChildNode(rightChild)
   
   return(node)
 }
-
-create.node <- function (node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
-  # Error checking
-  if (type != "binary" && type != "numerical"){
-    stop("Node can either be binary or numerical!")
-  }
-  
-  if (node.type != "left" && node.type != "right" && node.type != "root") {
-    stop("A node can either be left or right or root")
-  }
-  
-  node <- Node$new()
-  node$type <- node.type
-  node$val <- node.val
-  node$name <- node.label
-  node$attr <- node.label
-  node$y <- y
-  
-  if (node.type == "left"){
-    node$name <- paste(node.label, "<=", node.val, sep = '')
-  } else if (node.type == "right") {
-    node$name <- paste(node.label, ">", node.val, sep = '')
-  }
-  
-  # Increment the depth of the child = node of parent + 1
-  # Maybe here perform some checks about the depth of the tree.
-  node$isTerminal <- FALSE
-  
-  return (node)
-}
-
 
 
