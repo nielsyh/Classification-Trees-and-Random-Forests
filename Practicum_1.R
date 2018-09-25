@@ -112,7 +112,6 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
 
 #recursive function to build a tree.
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
-  
   node.data <- node$y
   
   tmp <- impurity(node.data[,ncol(node.data)])
@@ -145,7 +144,9 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   #skip first and last column
   for(row in 1:(ncol(node.data)-1)){
     #only split when there is more then 1 unique data value
-    if(unique(node.data[,row]) > 1){
+    
+
+    if(length(unique(node.data[, row])) > 1){
       #split
       bs <- bestsplit(node.data[,row], node.data[,ncol(node.data)])
       #get reduction on this split
@@ -158,6 +159,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
       }
     }
   }
+  
   #check if found split.
   if(is.null(split.value)){
     print('no split possible, return node')
