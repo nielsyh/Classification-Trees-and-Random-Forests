@@ -17,7 +17,7 @@ impurity <- function(data = c()) {
   return(res)
 }
 
-#calcualtes reduction with the gini-index. 
+#calculates impurity reduction using the gini-index method. 
 impurity_reduction <- function(orig = c(), uno = c(), dos=c()){
   l <- length(orig)
   l_uno <- length(uno)
@@ -26,14 +26,14 @@ impurity_reduction <- function(orig = c(), uno = c(), dos=c()){
   return(res)
 }
 
-#returns bestsplit, tested on income.
+#returns bestsplit, tested on income. numeric data -> data to be slit, class_data -> classification of the numeric data. 
 bestsplit <-function(num_data = c(), class_data = c()){
   num_sorted <- sort(unique(num_data))
   splitpoints <- (num_sorted[1:(length(num_sorted) - 1)]+num_sorted[2:length(num_sorted)])/2
   orig <- impurity(class_data)
   best <- 0
   val <- 0
-  
+  #Check for all splits which one gives the highest impurity reduction.
   for (i in splitpoints){
     res <- impurity_reduction(class_data, class_data[num_data > i], class_data[num_data <= i])
     if(res > val){
@@ -68,14 +68,11 @@ node.create <- function (node.label = "", node.type = "left", type = "binary", n
     node$name <- paste(node.label, ">", node.val, sep = '')
   }
   
-  # Increment the depth of the child = node of parent + 1
-  # Maybe here perform some checks about the depth of the tree.
   node$isTerminal <- FALSE
   
   return (node)
 }
 
-#TODO add nfeat implementation
 #Required tree.grow function
 tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1 ) {
   # Sanity checks
@@ -106,15 +103,15 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
   
   # Create the tree's root node.
   root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
+  # Recurse on root node.
   tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
   return(tree)
 }
 
 #recursive function to build a tree.
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
-  node.data <- node$y
   
-  tmp <- impurity(node.data[,ncol(node.data)])
+  node.data <- node$y
 
   if(is.null(node.data)){
     print('no data')
@@ -140,14 +137,12 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   split.value <- NULL
   reduction.max <- 0
   
-  #todo add minleaf requirement
-  #skip first and last column
+  #skip first and last column ATLEAST FOR TEST DATA..
   for(row in 1:(ncol(node.data)-1)){
-    #only split when there is more then 1 unique data value
     
-
+    #only split when there is more then 1 unique data value, otherwise there is no posssible split.
     if(length(unique(node.data[, row])) > 1){
-      #split
+      #bs means bestsplit for that row of data.
       bs <- bestsplit(node.data[,row], node.data[,ncol(node.data)])
       #get reduction on this split
       reduction.total <- impurity_reduction(node.data[,ncol(node.data)],  node.data[,ncol(node.data)][node.data[,row]>bs],  node.data[,ncol(node.data)][node.data[,row]<=bs] )
@@ -181,7 +176,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2){
   return(node)
 }
 
-#PAVLOS function to get random indexes
+#PAVLOS his function to get random indexes
 sample.random.columns <- function(X, n) {
   if (n == ncol(X)){
     return (sort(c(1:ncol(X)), decreasing = FALSE))
