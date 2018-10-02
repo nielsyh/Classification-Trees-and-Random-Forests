@@ -3,10 +3,8 @@ if (!require("data.tree")){
   library(data.tree)
 }
 
-
 #fake data input
 data <- read.csv("C:/dm/credit.txt")
-
 
 #calcs impurity for a given node (1).
 impurity <- function(data = c()) {
