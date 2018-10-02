@@ -107,14 +107,27 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
     return(tree)
 }
 
+tree.majority <- function(node) {
+    width = ncol(node$y)
+    height = nrow(node$y)
 
+    classes = node$y[width:width]
+    agg = 0
+    for (i in classes) {
+        for (l in i)
+            agg = agg + l
+    }
+    total = agg / height
+    if (total >= 0.5) return(1)
+    return (0)
+}
 
 tree.traverse <- function(row, currentNode) {
     ch = length(currentNode$children)
 
     if (ch == 0) {
         data = currentNode$y
-        return (currentNode$y)
+        return (tree.majority(currentNode))
     }
 
     split_column <- currentNode$split_col
@@ -217,7 +230,8 @@ tree.classify <- function(x = c(), tr = NULL) {
     y <- 0
     for (index in 1:nrow(x)) {
         row = x[index,];
-        tree.traverse(row, tr)
+        result = tree.traverse(row, tr)
+        print(result)
     }
 }
 
