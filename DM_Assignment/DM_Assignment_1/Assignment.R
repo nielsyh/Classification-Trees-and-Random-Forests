@@ -59,7 +59,6 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
     node$type <- node.type
     node$val <- node.val
     node$name <- node.label
-    node$attr <- node.label
     node$y <- y
 
     if (node.type == "left") {
@@ -108,16 +107,19 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
     return(tree)
 }
 
+
+
 tree.traverse <- function(row, currentNode) {
     ch = length(currentNode$children)
 
     if (ch == 0) {
-        data = currentNode$y[6:6][0]
+        data = currentNode$y
         return (currentNode$y)
     }
 
     split_column <- currentNode$split_col
     split_value <- currentNode$split_val
+
     val <- row[split_column]
 
     if (val <= split_value) {
@@ -137,7 +139,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
         print('no data')
         return(node)
     }
-    if (ncol(node.data) < nmin) {
+    if (nrow(node.data) < nmin) {
         print('should be leaf?')
         return(node)
     }
