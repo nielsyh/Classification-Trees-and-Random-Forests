@@ -59,7 +59,7 @@ bestsplit <- function(num_data = c(), class_data = c()) {
 #  2. nmin - Niels
 #  3. minleaf - minimum number of leafs a node should have
 #  4. nfeat = Niels
-node.create <- function(node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
+node.create <- function(node.label = "", node.type = "left", type = "binary", node.val = "", x = c(), y = c()) {
     # Error checking
     if (type != "binary" && type != "numerical") {
         stop("Node can either be binary or numerical!")
@@ -73,7 +73,9 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
     node$type <- node.type
     node$val <- node.val
     node$name <- node.label
+    node$x <- x
     node$y <- y
+
 
     if (node.type == "left") {
         node$name <- paste(node.label, "<=", node.val, sep = '')
@@ -93,14 +95,13 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
 #  2. nmin - Niels
 #  3. minleaf - minimum number of leafs a node should have
 #  4. nfeat = Niels
-tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1) {
+tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x)) - 1) {
     # Sanity checks
-
-    if (is.null(data)) {
+    if (is.null(x)) {
         stop("Feature table cannot be empty or null")
     }
 
-    if (is.null(data)) {
+    if (is.null(x)) {
         stop("Class label cannot be empty or null")
     }
 
@@ -112,21 +113,20 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
         stop("Minimum number of observations for a node has to be positive")
     }
 
-    if (nfeat > ncol(data)) {
+    if (nfeat > ncol(x)) {
         stop("Cannot take a sample larger than the population.")
     }
 
-    if (nfeat < (ncol(data) - 1)) {
-        sample <- cbind(data[, sample.random.columns(data[-(ncol(data))], nfeat), drop = FALSE], class = data[, ncol(data)])
-        data <- sample
-    }
+    #TODO
+    #if (nfeat < (ncol(x))) {
+    # sample <- cbind(data[, sample.random.columns(data[-(ncol(data))], nfeat), drop = FALSE], class = data[, ncol(data)])
+    # data <- sample
+    # }
 
     # Create the tree's root node.
-    root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
-
+    root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
     tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
-
     return(tree)
 }
 
@@ -136,14 +136,18 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
 #  Arguments:
 #  1. data - is the data to be predicted
 #  2. nmin - Niels
-#  3. minleaf - minimum number of leafs a node should have
+#  3. minleaf - minimum number of leafs a node should have\
 #  4. nfeat = Niels
 #  5. m = number of trees to be used in the bagging
-tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
+tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
     result <- list()
 
     for (i in 1:m) {
-        iTree = tree.grow(data[sample(nrow(data), nrow(data) * 0.9),], nmin, minleaf, nfeat)
+        df = merge(x, y)
+        sample = df[sample(nrow(df), nrow(df) * 0.9),]
+        label <- sample$y
+        sample$y = NULL
+        iTree = tree.grow(sample, label, nmin, minleaf, nfeat)
         result[[i]] <- iTree
     }
 
@@ -246,8 +250,9 @@ tree.traverse <- function(row, currentNode) {
 }
 
 #recursive function to build a tree.
-tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
-    node.data <- node$y
+tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
+    node.data <- node$x
+    node.classification <- node$y
 
     if (is.null(node.data)) {
         #print('no data')
@@ -257,7 +262,8 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
         #print('should be leaf?')
         return(node)
     }
-    if (impurity(node.data[, ncol(node.data)]) == 0) {
+    #if (impurity(node.data[, ncol(node.data)]) == 0) {
+    if (impurity(node.classification) == 0) {
         #print('Leaf because pure')
         return(node)
     }
@@ -273,16 +279,23 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
     reduction.max <- 0
 
     #skip first and last column ATLEAST FOR TEST DATA..
-    for (col in 1:(ncol(node.data) - 1)) {
+    #for (col in 1:(ncol(node.data) - 1)) {
+    for (col in 2:(ncol(node.data))) {
 
         #only split when there is more then 1 unique data value, otherwise there is no posssible split.
         if (length(unique(node.data[, col])) > 1) {
 
-            #bs means bestsplit for that col of data.
-            bs <- bestsplit(node.data[, col], node.data[, ncol(node.data)])
+            #bestsplit means bestsplit for that col of data.
+            #arg1 feature data
+            #arg2 binary value if post bugs where found
+            bs <- bestsplit(node.data[, col], as.numeric((node.classification) > 0))
 
             #get reduction on this split
-            reduction.total <- impurity_reduction(node.data[, ncol(node.data)], node.data[, ncol(node.data)][node.data[, col] > bs], node.data[, ncol(node.data)][node.data[, col] <= bs])
+            #arg1 all classification data
+            #arg2 first half classification data
+            #arg3 seconds half classification data
+            #reduction.total <- impurity_reduction(node.data[, ncol(node.data)], node.data[, ncol(node.data)][node.data[, col] > bs], node.data[, ncol(node.data)][node.data[, col] <= bs])
+            reduction.total <- impurity_reduction(node.classification, node.classification[node.data[, col] > bs], node.classification[node.data[, col] <= bs])
 
             #check if this split is the best until now, if yes -> remember the split.
             if (reduction.total > reduction.max) {
@@ -300,8 +313,8 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
     }
 
     #make right and left children
-    leftChild <- node.create(node.label = 1, node.type = "left", node.val = split.value, y = node.data[node.data[, split.col] <= split.value,])
-    rightChild <- node.create(node.label = 1, node.type = "right", node.val = split.value, y = node.data[node.data[, split.col] > split.value,])
+    leftChild <- node.create(node.label = 1, node.type = "left", node.val = split.value, x = node.data[node.data[, split.col] <= split.value,], y = node.classification[node.data[, split.col] <= split.value])
+    rightChild <- node.create(node.label = 1, node.type = "right", node.val = split.value, x = node.data[node.data[, split.col] > split.value,], y = node.classification[node.data[, split.col] > split.value])
 
     node$split_col = split.col
     node$split_val = split.value
@@ -352,11 +365,13 @@ getConfusionMatrix <- function(true_data, train_data) {
 }
 
 #fake data input
-train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE,  sep = ";")
-test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE,  sep = ";")
+train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE, sep = ";")
+test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE, sep = ";")
 
 #this is our built tree
-trees <- tree.grow.bag(train_data, m = 5, minleaf = 5, nmin = 15)
+label <- train_data$post
+train_data$post = NULL
+trees <- tree.grow.bag(train_data, label, m = 5, minleaf = 5, nmin = 15)
 result <- tree.classify.bag(test_data, trees)
 cols <- ncol(test_data)
 
