@@ -197,8 +197,8 @@ tree.majorityVote <- function(predictions) {
 
     #if they're equal, we must choose one randomly
     rand <- sample(1:100, 1)
-    if (rand <= 50) return(0)
-    else return(1)
+    if (rand <= 50) return(1)
+    else return(0)
 }
 
 # Description: 
@@ -325,12 +325,11 @@ sample.random.columns <- function(X, n) {
 # with the function tree.grow
 tree.classify <- function(x = c(), tr) {
     y <- 0
-    l <- list()
+    l <- 0
     for (index in 1:nrow(x)) {
         row = x[index,];
         result = tree.traverse(row, tr)
         l[[index]] <- result
-        #print(result)
     }
     return(l)
 }
@@ -346,7 +345,8 @@ getConfusionMatrix <- function(true_data, train_data) {
 }
 
 #fake data input
-data <- read.csv("C:/data.csv")
+testdata <- read.csv('C:/data.csv')
 #this is our built tree
-tree <- tree.grow.bag(data, m = 10)
-result <- tree.classify.bag(data, tree)
+trees <- tree.grow.bag(testdata, m = 5, minleaf =  5, nmin = 20)
+result <- tree.classify.bag(testdata, trees)
+getConfusionMatrix(testdata[,ncol(testdata)], result)
