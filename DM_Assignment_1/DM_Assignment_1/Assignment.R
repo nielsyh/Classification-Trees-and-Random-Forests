@@ -350,4 +350,4 @@ test_data <- read.csv('C:\\dm\\eclipse-metrics-packages-3.0.csv')
 #this is our built tree
 trees <- tree.grow.bag(train_data, m = 5, minleaf = 5, nmin = 15)
 result <- tree.classify.bag(test_data, trees)
-getConfusionMatrix(testdata[,ncol(testdata)], result)
+getConfusionMatrix(test_data[, ncol(test_data)], result)
