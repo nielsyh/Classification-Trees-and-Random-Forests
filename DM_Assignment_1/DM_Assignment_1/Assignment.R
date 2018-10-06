@@ -345,8 +345,10 @@ getConfusionMatrix <- function(true_data, train_data) {
 }
 
 #fake data input
-train_data <- read.csv('C:\\dm\\eclipse-metrics-packages-2.0.csv')
-test_data <- read.csv('C:\\dm\\eclipse-metrics-packages-3.0.csv')
+fake_data <- read.csv('C:/dm/data.csv')
+train_data <- read.csv('C:/dm/eclipse-metrics-packages-2.0.csv', header = TRUE,  sep = ";")
+test_data <- read.csv('C:/dm/eclipse-metrics-packages-3.0.csv', header = TRUE,  sep = ";")
+
 #this is our built tree
 trees <- tree.grow.bag(train_data, m = 5, minleaf = 5, nmin = 15)
 result <- tree.classify.bag(test_data, trees)
