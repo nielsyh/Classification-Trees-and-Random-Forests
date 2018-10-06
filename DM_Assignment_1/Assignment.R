@@ -3,6 +3,11 @@ if (!require("data.tree")) {
     library(data.tree)
 }
 
+if (!require("caret")) {
+  install.packages("caret", dependencies = TRUE)
+  library(caret)
+}
+
 #calcs impurity for a given node (1).
 impurity <- function(data = c()) {
     l <- length(data)
@@ -228,13 +233,24 @@ sample.random.columns <- function(X, n) {
 # with the function tree.grow
 tree.classify <- function(x = c(), tr = NULL) {
     y <- 0
+    l <- 0
     for (index in 1:nrow(x)) {
         row = x[index,];
         result = tree.traverse(row, tr)
+        l[[index]] <- result
         #print(result)
     }
+    return(l)
 }
 
+#returns condusion matrix
+#true_data is true data
+#train_data is train data
+#example: getConfusionMatrix(data[,6], res)
+getConfusionMatrix <- function(true_data, train_data){
+  matrix <- confusionMatrix(table(true_data, train_data))
+  return(matrix)
+}
 
 #fake data input
 data <- read.csv("C:/dm/credit.txt")
