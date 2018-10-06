@@ -83,7 +83,7 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
         stop("Class label cannot be empty or null")
     }
 
-    if (minleaf <= 1) {
+    if (minleaf < 1) {
         stop("Must have at least 2 observations on a leaf node")
     }
 
@@ -149,20 +149,20 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
     node.data <- node$y
 
     if (is.null(node.data)) {
-        print('no data')
+        #print('no data')
         return(node)
     }
     if (nrow(node.data) < nmin) {
-        print('should be leaf?')
+        #print('should be leaf?')
         return(node)
     }
     if (impurity(node.data[, ncol(node.data)]) == 0) {
-        print('Leaf because pure')
+        #print('Leaf because pure')
         return(node)
     }
 
     if (ncol(node.data) < minleaf) {
-        print('no valid split')
+        #print('no valid split')
         return(node)
     }
 
@@ -194,7 +194,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
 
     #check if found split.
     if (is.null(split.value)) {
-        print('no split possible, return node')
+        #print('no split possible, return node')
         return(node)
     }
 
@@ -231,7 +231,7 @@ tree.classify <- function(x = c(), tr = NULL) {
     for (index in 1:nrow(x)) {
         row = x[index,];
         result = tree.traverse(row, tr)
-        print(result)
+        #print(result)
     }
 }
 
