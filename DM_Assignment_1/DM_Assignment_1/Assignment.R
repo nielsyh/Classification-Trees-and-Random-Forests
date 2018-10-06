@@ -140,7 +140,7 @@ tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)
     result <- list()
 
     for (i in 1:m) {
-        iTree = tree.grow(data[sample(nrow(data), nrow(data)*0.9),], nmin, minleaf, nfeat)
+        iTree = tree.grow(data[sample(nrow(data), nrow(data) * 0.9),], nmin, minleaf, nfeat)
         result[[i]] <- iTree
     }
 
@@ -345,8 +345,9 @@ getConfusionMatrix <- function(true_data, train_data) {
 }
 
 #fake data input
-testdata <- read.csv('C:/data.csv')
+train_data <- read.csv('C:\\dm\\eclipse-metrics-packages-2.0.csv')
+test_data <- read.csv('C:\\dm\\eclipse-metrics-packages-3.0.csv')
 #this is our built tree
-trees <- tree.grow.bag(testdata, m = 5, minleaf =  5, nmin = 20)
-result <- tree.classify.bag(testdata, trees)
+trees <- tree.grow.bag(train_data, m = 5, minleaf = 5, nmin = 15)
+result <- tree.classify.bag(test_data, trees)
 getConfusionMatrix(testdata[,ncol(testdata)], result)
