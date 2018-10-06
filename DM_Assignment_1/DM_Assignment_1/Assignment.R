@@ -253,7 +253,8 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
         #print('should be leaf?')
         return(node)
     }
-    if (impurity(node.data[, ncol(node.data)]) == 0) {
+    #if (impurity(node.data[, ncol(node.data)]) == 0) {
+    if (impurity(node.data[, 4]) == 0) {
         #print('Leaf because pure')
         return(node)
     }
@@ -269,17 +270,31 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
     reduction.max <- 0
 
     #skip first and last column ATLEAST FOR TEST DATA..
-    for (col in 1:(ncol(node.data) - 1)) {
+    #for (col in 1:(ncol(node.data) - 1)) {
+    for (col in 2:(ncol(node.data))) {
+      
+      #classification column
+      if(col == 4){next}
 
         #only split when there is more then 1 unique data value, otherwise there is no posssible split.
         if (length(unique(node.data[, col])) > 1) {
 
             #bs means bestsplit for that col of data.
-            bs <- bestsplit(node.data[, col], node.data[, ncol(node.data)])
+            #bs <- bestsplit(node.data[, col], node.data[, ncol(node.data)])
+          
+            #bestsplit means bestsplit for that col of data.
+            #arg1 feature data
+            #arg2 binary value if post bugs where found
+            bs <- bestsplit(node.data[, col], as.numeric((node.data[,4]) > 0))
+          
 
             #get reduction on this split
-            reduction.total <- impurity_reduction(node.data[, ncol(node.data)], node.data[, ncol(node.data)][node.data[, col] > bs], node.data[, ncol(node.data)][node.data[, col] <= bs])
-
+            #arg1 all classification data
+            #arg2 first half classification data
+            #arg3 seconds half classification data
+            #reduction.total <- impurity_reduction(node.data[, ncol(node.data)], node.data[, ncol(node.data)][node.data[, col] > bs], node.data[, ncol(node.data)][node.data[, col] <= bs])
+            reduction.total <- impurity_reduction(node.data[, 4], node.data[, 4][node.data[, col] > bs], node.data[, 4][node.data[, col] <= bs])
+            
             #check if this split is the best until now, if yes -> remember the split.
             if (reduction.total > reduction.max) {
                 reduction.max <- reduction.total
@@ -327,6 +342,7 @@ tree.classify <- function(x = c(), tr) {
     y <- 0
     l <- 0
     for (index in 1:nrow(x)) {
+        if(index == 4){next}
         row = x[index,];
         result = tree.traverse(row, tr)
         l[[index]] <- result
