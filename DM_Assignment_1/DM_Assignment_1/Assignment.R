@@ -30,13 +30,13 @@ impurity_reduction <- function(orig = c(), uno = c(), dos = c()) {
 bestsplit <- function(num_data = c(), class_data = c()) {
     # sort numbers 
     num_sorted <- sort(unique(num_data))
+
     # find all split points => halfway
     splitpoints <- (num_sorted[1:(length(num_sorted) - 1)] + num_sorted[2:length(num_sorted)]) / 2
-
+    
     orig <- impurity(class_data)
-
     best <- 0
-    val <- 0
+    val <- (-1)
 
     #Check for all splits which one gives the highest impurity reduction.
     for (i in splitpoints) {
@@ -125,7 +125,7 @@ tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)
 
 
 tree.classify.bag <- function(matrix, trees) {
-    c <- list()
+    c <- 0
 
     for (index in 1:nrow(matrix)) {
         row <- matrix[index,];
@@ -320,4 +320,5 @@ data <- read.csv("C:/dm/credit.txt")
 #this is our built tree
 tree <- tree.grow.bag(data, m = 10)
 result <- tree.classify.bag(data, tree)
+testdata <- read.csv('C:/dm/pima-indians-diabetes.csv')
 print(result)
