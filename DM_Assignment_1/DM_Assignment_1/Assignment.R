@@ -124,24 +124,20 @@ tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)
 }
 
 
-tree.classify.bag <- function(matrix, trees) {
+tree.classify.bag <- function(input, trees) {
     c <- list()
 
-    for (index in 1:nrow(matrix)) {
-        row <- matrix[index,];
+    for (index in 1:nrow(input)) {
+        row <- input[index,];
         r = list()
 
         n <- 1
 
         for (tree in trees) {
             mat = matrix(row, ncol = length(row))
-
             class <- tree.classify(mat, tree)
-
             class_result <- class[[1]]
-
             r[[n]]=class_result
-
             n <- n + 1
         }
 
