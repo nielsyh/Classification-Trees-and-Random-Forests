@@ -115,30 +115,41 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
 }
 
 tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
-    result <- 0
+    result <- list()
     for (i in 1:m) {
         iTree = tree.grow(data, nmin, minleaf, nfeat)
-        result[[i]] <- itree
+        result[[i]] <- iTree
     }
     return(result)
 }
 
 
-tree.classify.bag <- function(trees, matrix) {
-    results <- 0
-    for (row in 1:nrow) {
-        row <- x[index,];
-        r = c()
-        n = 0
+tree.classify.bag <- function(matrix, trees) {
+    c <- list()
+
+    for (index in 1:nrow(matrix)) {
+        row <- matrix[index,];
+        r = list()
+
+        n <- 1
+
         for (tree in trees) {
-            class <- tree.classify(row)
-            r[[n]] = class
-            n = n + 1
+            mat = matrix(row, ncol = length(row))
+
+            class <- tree.classify(mat, tree)
+
+            class_result <- class[[1]]
+
+            r[[n]]=class_result
+
+            n <- n + 1
         }
+
         result_class = tree.majorityVote(r)
-        c[[row]] = result_class
+        c[[index]] = result_class
     }
-    return(results)
+
+    return(c)
 }
 
 
@@ -283,9 +294,9 @@ sample.random.columns <- function(X, n) {
 # Here x is a data matrix containing the attribute values of the cases for
 # which predictions are required, and tr is a tree object created
 # with the function tree.grow
-tree.classify <- function(x = c(), tr = NULL) {
+tree.classify <- function(x = c(), tr) {
     y <- 0
-    l <- 0
+    l <- list()
     for (index in 1:nrow(x)) {
         row = x[index,];
         result = tree.traverse(row, tr)
@@ -307,5 +318,6 @@ getConfusionMatrix <- function(true_data, train_data) {
 #fake data input
 data <- read.csv("C:/dm/credit.txt")
 #this is our built tree
-tree <- tree.grow(data)
-tree.classify(data, tree)
+tree <- tree.grow.bag(data, m = 10)
+result <- tree.classify.bag(data, tree)
+print(result)
