@@ -17,22 +17,27 @@ impurity <- function(data = c()) {
     return(res)
 }
 
-#calculates impurity reduction using the gini-index method. 
+#Description: calculates impurity reduction using the gini-index method. 
 impurity_reduction <- function(orig = c(), uno = c(), dos = c()) {
+
     l <- length(orig)
+    print(cat("length original: ", length(orig)))
+
     l_uno <- length(uno)
     l_dos <- length(dos)
+
     res <- impurity(orig) - ((l_uno / l) * impurity(uno) + (l_dos / l) * impurity(dos))
+
     return(res)
 }
 
 #returns bestsplit, tested on income. numeric data -> data to be slit, class_data -> classification of the numeric data. 
 bestsplit <- function(num_data = c(), class_data = c()) {
     # sort numbers 
+
     num_sorted <- sort(unique(num_data))
     # find all split points => halfway
     splitpoints <- (num_sorted[1:(length(num_sorted) - 1)] + num_sorted[2:length(num_sorted)]) / 2
-
     orig <- impurity(class_data)
 
     best <- 0
@@ -49,9 +54,13 @@ bestsplit <- function(num_data = c(), class_data = c()) {
     return(best)
 }
 
-
-
-#function to create a node
+# Description:  Grow a classification tree
+# Returns: A classification tree
+#  Arguments:
+#  1. data - is the data to be predicted
+#  2. nmin - Niels
+#  3. minleaf - minimum number of leafs a node should have
+#  4. nfeat = Niels
 node.create <- function(node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
     # Error checking
     if (type != "binary" && type != "numerical") {
@@ -79,7 +88,13 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
     return(node)
 }
 
-#Required tree.grow function
+# Description:  Grow a classification tree
+# Returns: A classification tree
+#  Arguments:
+#  1. data - is the data to be predicted
+#  2. nmin - Niels
+#  3. minleaf - minimum number of leafs a node should have
+#  4. nfeat = Niels
 tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1) {
     # Sanity checks
     if (is.null(data)) {
@@ -114,18 +129,33 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
     return(tree)
 }
 
+
+# Description:  Grows classification trees using the bagging process
+# Returns: A set of classification trees
+#  Arguments:
+#  1. data - is the data to be predicted
+#  2. nmin - Niels
+#  3. minleaf - minimum number of leafs a node should have
+#  4. nfeat = Niels
+#  5. m = number of trees to be used in the bagging
 tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
     result <- list()
+
     for (i in 1:m) {
         iTree = tree.grow(data, nmin, minleaf, nfeat)
         result[[i]] <- iTree
     }
+
     return(result)
 }
 
-
+# Description:  Classify using the provided trees and take the majority vote result of the trees
+# Returns: A prediction for each sample
+#  Arguments:
+#  1. input = the input data
+#  2. trees = the grown classification tree roots
 tree.classify.bag <- function(input, trees) {
-    c <- list()
+    c <- 0
 
     for (index in 1:nrow(input)) {
         row <- input[index,];
@@ -137,7 +167,7 @@ tree.classify.bag <- function(input, trees) {
             mat = matrix(row, ncol = length(row))
             class <- tree.classify(mat, tree)
             class_result <- class[[1]]
-            r[[n]]=class_result
+            r[[n]] = class_result
             n <- n + 1
         }
 
@@ -149,10 +179,13 @@ tree.classify.bag <- function(input, trees) {
 }
 
 
+# Description: 
+# Returns: The majority class of the predictions argument
+# Arguments:
+# 1. predictions = a set of 0,1 predictions
 tree.majorityVote <- function(predictions) {
     zeros = 0
     ones = 0
-
     for (i in predictions) {
         if (i == 1) {
             ones = ones + 1
@@ -161,10 +194,8 @@ tree.majorityVote <- function(predictions) {
             zeros = zeros + 1
         }
     }
-
     if (zeros > ones) return(0)
     if (ones > zeros) return(1)
-
 
     #if they're equal, we must choose one randomly
     rand <- sample(1:100, 1)
@@ -172,6 +203,10 @@ tree.majorityVote <- function(predictions) {
     else return(1)
 }
 
+# Description: 
+# Returns: The majority class of the predictions argument
+# Arguments:
+# 1. predictions = a set of 0,1 predictions
 tree.majority <- function(node) {
     width = ncol(node$y)
     height = nrow(node$y)
@@ -312,7 +347,7 @@ getConfusionMatrix <- function(true_data, train_data) {
 }
 
 #fake data input
-data <- read.csv("C:/dm/credit.txt")
+data <- read.csv("C:/data.csv")
 #this is our built tree
 tree <- tree.grow.bag(data, m = 10)
 result <- tree.classify.bag(data, tree)
