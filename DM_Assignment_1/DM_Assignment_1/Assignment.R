@@ -95,6 +95,7 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
 #  4. nfeat = Niels
 tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1) {
     # Sanity checks
+
     if (is.null(data)) {
         stop("Feature table cannot be empty or null")
     }
@@ -122,8 +123,10 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
 
     # Create the tree's root node.
     root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, y = data)
+
     # Recurse on root node.
     tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
+
     return(tree)
 }
 
@@ -197,6 +200,7 @@ tree.majorityVote <- function(predictions) {
 
     #if they're equal, we must choose one randomly
     rand <- sample(1:100, 1)
+
     if (rand <= 50) return(1)
     else return(0)
 }
@@ -324,8 +328,10 @@ sample.random.columns <- function(X, n) {
 # which predictions are required, and tr is a tree object created
 # with the function tree.grow
 tree.classify <- function(x = c(), tr) {
+
     y <- 0
     l <- 0
+
     for (index in 1:nrow(x)) {
         row = x[index,];
         result = tree.traverse(row, tr)
