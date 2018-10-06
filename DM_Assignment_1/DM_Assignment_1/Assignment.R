@@ -296,7 +296,7 @@ sample.random.columns <- function(X, n) {
 # with the function tree.grow
 tree.classify <- function(x = c(), tr) {
     y <- 0
-    l <- list()
+    l <- 0
     for (index in 1:nrow(x)) {
         row = x[index,];
         result = tree.traverse(row, tr)
@@ -317,8 +317,10 @@ getConfusionMatrix <- function(true_data, train_data) {
 
 #fake data input
 data <- read.csv("C:/dm/credit.txt")
-#this is our built tree
-tree <- tree.grow.bag(data, m = 10)
-result <- tree.classify.bag(data, tree)
 testdata <- read.csv('C:/dm/pima-indians-diabetes.csv')
-print(result)
+#this is our built tree
+tree <- tree.grow.bag(testdata, m = 10, minleaf =  5, nmin = 20)
+result <- tree.classify.bag(testdata, tree)
+getConfusionMatrix(testdata[,ncol(testdata)], result)
+
+#print(result)
