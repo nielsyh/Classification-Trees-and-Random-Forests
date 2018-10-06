@@ -21,8 +21,6 @@ impurity <- function(data = c()) {
 impurity_reduction <- function(orig = c(), uno = c(), dos = c()) {
 
     l <- length(orig)
-    print(cat("length original: ", length(orig)))
-
     l_uno <- length(uno)
     l_dos <- length(dos)
 
@@ -36,12 +34,12 @@ bestsplit <- function(num_data = c(), class_data = c()) {
     # sort numbers 
 
     num_sorted <- sort(unique(num_data))
+
     # find all split points => halfway
     splitpoints <- (num_sorted[1:(length(num_sorted) - 1)] + num_sorted[2:length(num_sorted)]) / 2
     orig <- impurity(class_data)
-
     best <- 0
-    val <- 0
+    val <- (-1)
 
     #Check for all splits which one gives the highest impurity reduction.
     for (i in splitpoints) {
@@ -154,11 +152,11 @@ tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)
 #  Arguments:
 #  1. input = the input data
 #  2. trees = the grown classification tree roots
-tree.classify.bag <- function(input, trees) {
+tree.classify.bag <- function(matrix, trees) {
     c <- 0
 
-    for (index in 1:nrow(input)) {
-        row <- input[index,];
+    for (index in 1:nrow(matrix)) {
+        row <- matrix[index,];
         r = list()
 
         n <- 1
@@ -343,6 +341,7 @@ tree.classify <- function(x = c(), tr) {
 #example: getConfusionMatrix(data[,6], res)
 getConfusionMatrix <- function(true_data, train_data) {
     matrix <- confusionMatrix(table(true_data, train_data))
+    print(matrix)
     return(matrix)
 }
 
@@ -351,4 +350,3 @@ data <- read.csv("C:/data.csv")
 #this is our built tree
 tree <- tree.grow.bag(data, m = 10)
 result <- tree.classify.bag(data, tree)
-print(result)
