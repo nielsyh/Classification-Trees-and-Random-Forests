@@ -339,17 +339,19 @@ tree.classify <- function(x = c(), tr) {
 #train_data is train data
 #example: getConfusionMatrix(data[,6], res)
 getConfusionMatrix <- function(true_data, train_data) {
-    matrix <- confusionMatrix(table(true_data, train_data))
-    print(matrix)
+    u <- union(train_data, true_data)
+    t <- table(factor(train_data, u), factor(true_data, u))
+    matrix <- confusionMatrix(t)
     return(matrix)
 }
 
 #fake data input
-fake_data <- read.csv('C:/dm/data.csv')
-train_data <- read.csv('C:/dm/eclipse-metrics-packages-2.0.csv', header = TRUE,  sep = ";")
-test_data <- read.csv('C:/dm/eclipse-metrics-packages-3.0.csv', header = TRUE,  sep = ";")
+train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE,  sep = ";")
+test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE,  sep = ";")
 
 #this is our built tree
 trees <- tree.grow.bag(train_data, m = 5, minleaf = 5, nmin = 15)
 result <- tree.classify.bag(test_data, trees)
-getConfusionMatrix(test_data[, ncol(test_data)], result)
+cols <- ncol(test_data)
+
+getConfusionMatrix(test_data[, cols], result)
