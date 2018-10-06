@@ -140,7 +140,7 @@ tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)
     result <- list()
 
     for (i in 1:m) {
-        iTree = tree.grow(data, nmin, minleaf, nfeat)
+        iTree = tree.grow(data[sample(nrow(data), nrow(data)*0.9),], nmin, minleaf, nfeat)
         result[[i]] <- iTree
     }
 
