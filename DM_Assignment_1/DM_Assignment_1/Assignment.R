@@ -44,6 +44,8 @@ bestsplit <- function(num_data = c(), class_data = c()) {
     return(best)
 }
 
+
+
 #function to create a node
 node.create <- function(node.label = "", node.type = "left", type = "binary", node.val = "", y = c()) {
     # Error checking
@@ -107,6 +109,57 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
     return(tree)
 }
 
+tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
+    result = c()
+    for (i in 1:m) {
+        iTree = tree.grow(data, nmin, minleaf, nfeat)
+        result[[i]] <- itree
+    }
+    return(result)
+}
+
+
+tree.classify.bag <- function(trees, matrix) {
+    results = c()
+    for (row in 1:nrow) {
+        row <- x[index,];
+        r = c()
+        n = 0
+        for (tree in trees) {
+            class <- tree.classify(row)
+            r[[n]] = class
+            n = n + 1
+        }
+        result_class = tree.majorityVote(r)
+        c[[row]]=result_class
+    }
+    return (results)
+}
+
+
+tree.majorityVote <- function(predictions) {
+    zeros = 0
+    ones = 0
+
+    for (i in predictions) {
+        if (i == 1) {
+            ones = ones+1
+        }
+        else {
+            zeros = zeros + 1
+        }
+    }
+
+    if (zeros > ones) return(0)
+    if (ones > zeros) return(1)
+
+
+    #if they're equal, we must choose one randomly
+    rand <- sample(1:100, 1)
+    if (rand <= 50) return (0)
+    else return (1)
+}
+
 tree.majority <- function(node) {
     width = ncol(node$y)
     height = nrow(node$y)
@@ -119,7 +172,7 @@ tree.majority <- function(node) {
     }
     total = agg / height
     if (total >= 0.5) return(1)
-    return (0)
+    return(0)
 }
 
 tree.traverse <- function(row, currentNode) {
@@ -127,7 +180,7 @@ tree.traverse <- function(row, currentNode) {
 
     if (ch == 0) {
         data = currentNode$y
-        return (tree.majority(currentNode))
+        return(tree.majority(currentNode))
     }
 
     split_column <- currentNode$split_col
@@ -145,7 +198,6 @@ tree.traverse <- function(row, currentNode) {
 
 #recursive function to build a tree.
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2) {
-
     node.data <- node$y
 
     if (is.null(node.data)) {
