@@ -95,7 +95,7 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
 #  2. nmin - Niels
 #  3. minleaf - minimum number of leafs a node should have
 #  4. nfeat = Niels
-tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1) {
+tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data))) {
     # Sanity checks
     if (is.null(x)) {
         stop("Feature table cannot be empty or null")
@@ -117,11 +117,12 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(dat
         stop("Cannot take a sample larger than the population.")
     }
 
-  #TODO
-    #if (nfeat < (ncol(x))) {
-       # sample <- cbind(data[, sample.random.columns(data[-(ncol(data))], nfeat), drop = FALSE], class = data[, ncol(data)])
-       # data <- sample
-   # }
+  #TODO what about the 2 first columns??? there useless?? need names?
+  #-2 because 
+    if (nfeat < (ncol(x))) {
+        sample <- x[, sample.random.columns(train_data, nfeat)]
+        x <- sample
+    }
 
     # Create the tree's root node.
     root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, x = x, y = y)
