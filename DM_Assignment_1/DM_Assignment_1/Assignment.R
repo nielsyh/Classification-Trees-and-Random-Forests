@@ -4,8 +4,8 @@ if (!require("data.tree")) {
 }
 
 if (!require("caret")) {
-  install.packages("caret", dependencies = TRUE)
-  library(caret)
+    install.packages("caret", dependencies = TRUE)
+    library(caret)
 }
 
 #calcs impurity for a given node (1).
@@ -115,7 +115,7 @@ tree.grow <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 
 }
 
 tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
-    result = c()
+    result <- 0
     for (i in 1:m) {
         iTree = tree.grow(data, nmin, minleaf, nfeat)
         result[[i]] <- itree
@@ -125,7 +125,7 @@ tree.grow.bag <- function(data = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)
 
 
 tree.classify.bag <- function(trees, matrix) {
-    results = c()
+    results <- 0
     for (row in 1:nrow) {
         row <- x[index,];
         r = c()
@@ -136,9 +136,9 @@ tree.classify.bag <- function(trees, matrix) {
             n = n + 1
         }
         result_class = tree.majorityVote(r)
-        c[[row]]=result_class
+        c[[row]] = result_class
     }
-    return (results)
+    return(results)
 }
 
 
@@ -148,7 +148,7 @@ tree.majorityVote <- function(predictions) {
 
     for (i in predictions) {
         if (i == 1) {
-            ones = ones+1
+            ones = ones + 1
         }
         else {
             zeros = zeros + 1
@@ -161,8 +161,8 @@ tree.majorityVote <- function(predictions) {
 
     #if they're equal, we must choose one randomly
     rand <- sample(1:100, 1)
-    if (rand <= 50) return (0)
-    else return (1)
+    if (rand <= 50) return(0)
+    else return(1)
 }
 
 tree.majority <- function(node) {
@@ -299,9 +299,9 @@ tree.classify <- function(x = c(), tr = NULL) {
 #true_data is true data
 #train_data is train data
 #example: getConfusionMatrix(data[,6], res)
-getConfusionMatrix <- function(true_data, train_data){
-  matrix <- confusionMatrix(table(true_data, train_data))
-  return(matrix)
+getConfusionMatrix <- function(true_data, train_data) {
+    matrix <- confusionMatrix(table(true_data, train_data))
+    return(matrix)
 }
 
 #fake data input
