@@ -146,7 +146,7 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 
     for (i in 1:m) {
         df = merge(x, y)
-        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.9),]
+        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.3),]
         label <- sample$y
         sample$y = NULL
         iTree = tree.grow(sample, label, nmin, minleaf, nfeat)
@@ -415,6 +415,6 @@ test_labels <- test_data$post
 test_data$post = NULL
 
 
-trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 3)
+trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 10)
 pr <- tree.classify.bag(test_data, trees)
 getConfusionMatrix(test_labels, pr)
