@@ -119,18 +119,15 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(dat
         stop("Cannot take a sample larger than the population.")
     }
 
-
-  #TODO what about the 2 first columns??? there useless?? need names?
-  #-2 because 
     if (nfeat < (ncol(x))) {
         sample <- x[, sample.random.columns(train_data, nfeat)]
         x <- sample
     }
-
     # Create the tree's root node.
     root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
     tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
+
     return(tree)
 }
 
@@ -149,7 +146,7 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 
     for (i in 1:m) {
         df = merge(x, y)
-        sample = df[sample(nrow(df), nrow(df) * 0.9),]
+        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.9),]
         label <- sample$y
         sample$y = NULL
         iTree = tree.grow(sample, label, nmin, minleaf, nfeat)
@@ -164,11 +161,11 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 #  Arguments:
 #  1. input = the input data
 #  2. trees = the grown classification tree roots
-tree.classify.bag <- function(matrix, trees) {
+tree.classify.bag <- function(input, trees) {
     c <- 0
 
-    for (index in 1:nrow(matrix)) {
-        row <- matrix[index,];
+    for (index in 1:nrow(input)) {
+        row <- input[index,];
         r = list()
 
         n <- 1
@@ -219,14 +216,19 @@ tree.majorityVote <- function(predictions) {
 # Arguments:
 # 1. predictions = a set of 0,1 predictions
 tree.majority <- function(node) {
-    width = ncol(node$y)
-    height = nrow(node$y)
+    height = nrow(node$x)
 
-    classes = node$y[width:width]
+    classes = node$y
+
     agg = 0
     for (i in classes) {
-        for (l in i)
-            agg = agg + l
+        for (l in i) {
+            final <- 0
+            if (l >= 1) {
+                final <- 1
+            }
+            agg = agg + final
+        }
     }
     total = agg / height
     if (total >= 0.5) return(1)
@@ -237,7 +239,6 @@ tree.traverse <- function(row, currentNode) {
     ch = length(currentNode$children)
 
     if (ch == 0) {
-        data = currentNode$y
         return(tree.majority(currentNode))
     }
 
@@ -260,21 +261,17 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
     node.classification <- node$y
 
     if (is.null(node.data)) {
-        #print('no data')
         return(node)
     }
     if (nrow(node.data) < nmin) {
-        #print('should be leaf?')
         return(node)
     }
     #if (impurity(node.data[, ncol(node.data)]) == 0) {
     if (impurity(node.classification) == 0) {
-        #print('Leaf because pure')
         return(node)
     }
 
     if (ncol(node.data) < minleaf) {
-        #print('no valid split')
         return(node)
     }
 
@@ -293,7 +290,7 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
             #bestsplit means bestsplit for that col of data.
             #arg1 feature data
             #arg2 binary value if post bugs where found
-            bs <- bestsplit(node.data[, col], as.numeric((node.classification) > 0))
+            bs <- bestsplit(node.data[, col], as.numeric(node.classification > 0))
 
             #get reduction on this split
             #arg1 all classification data
@@ -313,7 +310,6 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
 
     #check if found split.
     if (is.null(split.value)) {
-        #print('no split possible, return node')
         return(node)
     }
 
@@ -364,9 +360,14 @@ tree.classify <- function(x = c(), tr) {
 #train_data is train data
 #example: getConfusionMatrix(data[,6], res)
 getConfusionMatrix <- function(true_data, train_data) {
+
+    true_data <- as.numeric(true_data > 0)
+    train_data <- as.numeric(train_data > 0)
+
     u <- union(train_data, true_data)
     t <- table(factor(train_data, u), factor(true_data, u))
     matrix <- confusionMatrix(t)
+    print(matrix)
     return(matrix)
 }
 
@@ -378,10 +379,8 @@ test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE,
 label <- train_data$post
 train_data$post = NULL
 
-tree<- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
-trees <- tree.grow.bag(train_data, label, m = 5, minleaf = 5, nmin = 15)
+#tree <- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
 
+trees <- tree.grow.bag(train_data, label, m = 5, minleaf = 5, nmin = 15, nfeat = 10)
 result <- tree.classify.bag(test_data, trees)
-cols <- ncol(test_data)
-
-getConfusionMatrix(test_data[, cols], result)
+getConfusionMatrix(test_data$post, result)
