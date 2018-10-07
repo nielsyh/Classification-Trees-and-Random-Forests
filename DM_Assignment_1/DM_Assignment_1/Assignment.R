@@ -52,13 +52,14 @@ bestsplit <- function(num_data = c(), class_data = c()) {
     return(best)
 }
 
-# Description:  Grow a classification tree
-# Returns: A classification tree
+# Description: Create a node
+# Returns: a node.
 #  Arguments:
-#  1. data - is the data to be predicted
-#  2. nmin - Niels
-#  3. minleaf - minimum number of leafs a node should have
-#  4. nfeat = Niels
+#  1. label: name of node
+#  2. type: right or left.
+#  3. x: The data to split
+#  4. y: labels that fit to x.
+#  5. val: value of splitpoint in this node. 
 node.create <- function(node.label = "", node.type = "left", type = "binary", node.val = "", x = c(), y = c()) {
     # Error checking
     if (type != "binary" && type != "numerical") {
@@ -91,16 +92,13 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
 # Description:  Grow a classification tree
 # Returns: A classification tree
 #  Arguments:
-#  1. data - is the data to be predicted
-#  2. nmin - Niels
-#  3. minleaf - minimum number of leafs a node should have
-#  4. nfeat = Niels
-<<<<<<< HEAD
+#  1. x: The data to split
+#  2. y: labels that fit to x.
+#  3. nmin - minimum amount of rows needed to split.
+#  4. minleaf - minimum number of leafs a node should have
+#  5. nfeat = Number of features to sample.
 tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data))) {
-=======
-tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x)) - 1) {
->>>>>>> 98423bdb472a2a3a95da4d188485b81d503eede3
-    # Sanity checks
+
     if (is.null(x)) {
         stop("Feature table cannot be empty or null")
     }
@@ -121,36 +119,31 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))
         stop("Cannot take a sample larger than the population.")
     }
 
-<<<<<<< HEAD
+
   #TODO what about the 2 first columns??? there useless?? need names?
   #-2 because 
     if (nfeat < (ncol(x))) {
         sample <- x[, sample.random.columns(train_data, nfeat)]
         x <- sample
     }
-=======
-    #TODO
-    #if (nfeat < (ncol(x))) {
-    # sample <- cbind(data[, sample.random.columns(data[-(ncol(data))], nfeat), drop = FALSE], class = data[, ncol(data)])
-    # data <- sample
-    # }
->>>>>>> 98423bdb472a2a3a95da4d188485b81d503eede3
+
 
     # Create the tree's root node.
-    root <- node.create(node.label = "Classification Tree", node.type = "root", node.val = 0, x = x, y = y)
+    root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
     tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
     return(tree)
 }
 
 
-# Description:  Grows classification trees using the bagging process
-# Returns: A set of classification trees
+# Description:  Grow a classification tree
+# Returns: A classification tree
 #  Arguments:
-#  1. data - is the data to be predicted
-#  2. nmin - Niels
-#  3. minleaf - minimum number of leafs a node should have\
-#  4. nfeat = Niels
+#  1. x: The data to split
+#  2. y: labels that fit to x.
+#  3. nmin - minimum amount of rows needed to split.
+#  4. minleaf - minimum number of leafs a node should have
+#  5. nfeat = Number of features to sample.
 #  5. m = number of trees to be used in the bagging
 tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
     result <- list()
@@ -326,8 +319,9 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
     }
 
     #make right and left children
-    leftChild <- node.create(node.label = 1, node.type = "left", node.val = split.value, x = node.data[node.data[, split.col] <= split.value,], y = node.classification[node.data[, split.col] <= split.value])
-    rightChild <- node.create(node.label = 1, node.type = "right", node.val = split.value, x = node.data[node.data[, split.col] > split.value,], y = node.classification[node.data[, split.col] > split.value])
+    #node$x[split.col,2]
+    leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value, x = node.data[node.data[, split.col] <= split.value,], y = node.classification[node.data[, split.col] <= split.value])
+    rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value, x = node.data[node.data[, split.col] > split.value,], y = node.classification[node.data[, split.col] > split.value])
 
     node$split_col = split.col
     node$split_val = split.value
@@ -384,6 +378,9 @@ test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE,
 #this is our built tree
 label <- train_data$post
 train_data$post = NULL
+
+tree<- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
+
 trees <- tree.grow.bag(train_data, label, m = 5, minleaf = 5, nmin = 15)
 result <- tree.classify.bag(test_data, trees)
 cols <- ncol(test_data)
