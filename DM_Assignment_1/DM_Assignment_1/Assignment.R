@@ -261,6 +261,8 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     if (nfeat < (ncol(node.data))) {
       sample <- node.data[, sample.random.columns(train_data, nfeat)]
       node.sample <- sample
+    }else{
+      node.sample <- node.data
     }
     
     node.classification <- node$y
@@ -421,7 +423,7 @@ eclipse <- function() {
 
 
 indians <- function() {
-    train_data <- read.csv('C://data.csv')
+    train_data <- read.csv('C://dm/data.csv')
     train_labels = train_data[,9]
     train_data[,9] = NULL
 
