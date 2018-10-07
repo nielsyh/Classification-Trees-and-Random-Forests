@@ -119,14 +119,11 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))
         stop("Cannot take a sample larger than the population.")
     }
 
-    if (nfeat < (ncol(x))) {
-        sample <- x[, sample.random.columns(train_data, nfeat)]
-        x <- sample
-    }
+    
     # Create the tree's root node.
     root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
-    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf)
+    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat)
 
     return(tree)
 }
@@ -258,8 +255,16 @@ tree.traverse <- function(row, currentNode) {
 }
 
 #recursive function to build a tree.
-tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
+tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     node.data <- node$x
+    
+    if (nfeat < (ncol(node.data))) {
+      sample <- node.data[, sample.random.columns(train_data, nfeat)]
+      node.sample <- sample
+    }
+  
+    
+    
     node.classification <- node$y
 
     if (is.null(node.data)) {
@@ -284,22 +289,22 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
 
     #skip first and last column ATLEAST FOR TEST DATA..
     #for (col in 1:(ncol(node.data) - 1)) {
-    for (col in 2:(ncol(node.data))) {
+    for (col in 2:(ncol(node.sample))) {
 
         #only split when there is more then 1 unique data value, otherwise there is no posssible split.
-        if (length(unique(node.data[, col])) > 1) {
+        if (length(unique(node.sample[, col])) > 1) {
 
             #bestsplit means bestsplit for that col of data.
             #arg1 feature data
             #arg2 binary value if post bugs where found
-            bs <- bestsplit(node.data[, col], as.numeric(node.classification > 0))
+            bs <- bestsplit(node.sample[, col], as.numeric(node.classification > 0))
 
             #get reduction on this split
             #arg1 all classification data
             #arg2 first half classification data
             #arg3 seconds half classification data
             #reduction.total <- impurity_reduction(node.data[, ncol(node.data)], node.data[, ncol(node.data)][node.data[, col] > bs], node.data[, ncol(node.data)][node.data[, col] <= bs])
-            reduction.total <- impurity_reduction(node.classification, node.classification[node.data[, col] > bs], node.classification[node.data[, col] <= bs])
+            reduction.total <- impurity_reduction(node.classification, node.classification[node.sample[, col] > bs], node.classification[node.sample[, col] <= bs])
 
             #check if this split is the best until now, if yes -> remember the split.
             if (reduction.total > reduction.max) {
@@ -317,15 +322,15 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
 
     #make right and left children
     #node$x[split.col,2]
-    leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value, x = node.data[node.data[, split.col] <= split.value,], y = node.classification[node.data[, split.col] <= split.value])
-    rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value, x = node.data[node.data[, split.col] > split.value,], y = node.classification[node.data[, split.col] > split.value])
+    leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value, x = node.data[node.sample[, split.col] <= split.value,], y = node.classification[node.sample[, split.col] <= split.value])
+    rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value, x = node.data[node.sample[, split.col] > split.value,], y = node.classification[node.sample[, split.col] > split.value])
 
     node$split_col = split.col
     node$split_val = split.value
 
     #recurse
-    tree.grow.rec(leftChild, nmin, minleaf)
-    tree.grow.rec(rightChild, nmin, minleaf)
+    tree.grow.rec(leftChild, nmin, minleaf, nfeat)
+    tree.grow.rec(rightChild, nmin, minleaf, nfeat)
 
     #add children to parent
     node$AddChildNode(leftChild)
@@ -334,11 +339,18 @@ tree.grow.rec <- function(node = NULL, y = NULL, nmin = 2, minleaf = 2) {
     return(node)
 }
 
-sample.random.columns <- function(X, n) {
-    if (n == ncol(X)) {
-        return(sort(c(1:ncol(X)), decreasing = FALSE))
+
+sample.random <- function(x, n){
+  index <- sample.random.columns(x,n)
+  return()
+  
+}
+
+sample.random.columns <- function(x, n) {
+    if (n == ncol(x)) {
+        return(sort(c(1:ncol(x)), decreasing = FALSE))
     }
-    return(sort(c(sample(1:ncol(X), n, replace = F)), decreasing = FALSE))
+    return(sort(c(sample(1:ncol(x), n, replace = F)), decreasing = FALSE))
 }
 
 # Here x is a data matrix containing the attribute values of the cases for
