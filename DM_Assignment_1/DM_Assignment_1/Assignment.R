@@ -97,7 +97,7 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
 #  3. nmin - minimum amount of rows needed to split.
 #  4. minleaf - minimum number of leafs a node should have
 #  5. nfeat = Number of features to sample.
-tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data))) {
+tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))) {
 
     if (is.null(x)) {
         stop("Feature table cannot be empty or null")
@@ -146,7 +146,7 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 
     for (i in 1:m) {
         df = merge(x, y)
-        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.3),]
+        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.9),]
         label <- sample$y
         sample$y = NULL
         iTree = tree.grow(sample, label, nmin, minleaf, nfeat)
@@ -207,8 +207,8 @@ tree.majorityVote <- function(predictions) {
     #if they're equal, we must choose one randomly
     rand <- sample(1:100, 1)
 
-    if (rand <= 50) return(1)
-    else return(0)
+    if (rand <= 50) return(0)
+    else return(1)
 }
 
 # Description: 
@@ -217,10 +217,9 @@ tree.majorityVote <- function(predictions) {
 # 1. predictions = a set of 0,1 predictions
 tree.majority <- function(node) {
     height = nrow(node$x)
-
     classes = node$y
-
     agg = 0.0
+
     for (i in classes) {
         for (l in i) {
             final <- 0
@@ -232,7 +231,9 @@ tree.majority <- function(node) {
     }
 
     total = agg / height
-    if (total >= 0.5) return(0)
+
+    if (total <= 0.5) return(0)
+
     return(1)
 }
 
@@ -353,7 +354,16 @@ tree.classify <- function(x = c(), tr) {
         result = tree.traverse(row, tr)
         l[[index]] <- result
     }
+
     return(l)
+}
+
+
+clean_csv <- function(csvFile, dropped) {
+    for (i in dropped) {
+        csvFile[, i] = NULL;
+    }
+    return(csvFile)
 }
 
 #returns condusion matrix
@@ -375,13 +385,36 @@ getConfusionMatrix <- function(true_data, train_data) {
 #fake data input
 train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE, sep = ";")
 test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE, sep = ";")
+v <- 0
+
+v[[1]] = 1
+v[[2]] = 2
+
+train_data <- clean_csv(train_data, v)
+test_data <- clean_csv(test_data, v)
 
 #this is our built tree
-label <- train_data$post
-train_data$post = NULL
+
+
+#train_data$post = NULL
 
 #tree <- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
 
-trees <- tree.grow.bag(train_data, label, m = 100, minleaf = 5, nmin = 15, nfeat = 41)
-result <- tree.classify.bag(test_data, trees)
-getConfusionMatrix(test_data$post, result)
+##print(tree.classify(train_data, tree.grow(train_data, label, nfeat = 41, minleaf = 5, nmin = 15)))
+#trees <- tree.grow.bag(train_data, as.numeric(label >= 1), m = 1, minleaf = 2, nmin = 2)
+#print('f')
+#result <- tree.classify.bag(train_data, trees)
+
+##train_data$post = as.numeric(label >= 1)
+#getConfusionMatrix(label, result)
+
+train_labels = train_data$post
+train_data$post = NULL
+
+test_labels <- test_data$post
+test_data$post = NULL
+
+
+trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 3)
+pr <- tree.classify.bag(test_data, trees)
+getConfusionMatrix(test_labels, pr)
