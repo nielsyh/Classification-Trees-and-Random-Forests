@@ -146,7 +146,7 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 
     for (i in 1:m) {
         df = merge(x, y)
-        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.9),]
+        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.3),]
         label <- sample$y
         sample$y = NULL
         iTree = tree.grow(sample, label, nmin, minleaf, nfeat)
@@ -220,7 +220,7 @@ tree.majority <- function(node) {
 
     classes = node$y
 
-    agg = 0
+    agg = 0.0
     for (i in classes) {
         for (l in i) {
             final <- 0
@@ -230,9 +230,10 @@ tree.majority <- function(node) {
             agg = agg + final
         }
     }
+
     total = agg / height
-    if (total >= 0.5) return(1)
-    return(0)
+    if (total >= 0.5) return(0)
+    return(1)
 }
 
 tree.traverse <- function(row, currentNode) {
@@ -381,6 +382,6 @@ train_data$post = NULL
 
 #tree <- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
 
-trees <- tree.grow.bag(train_data, label, m = 5, minleaf = 5, nmin = 15, nfeat = 10)
+trees <- tree.grow.bag(train_data, label, m = 100, minleaf = 5, nmin = 15, nfeat = 41)
 result <- tree.classify.bag(test_data, trees)
 getConfusionMatrix(test_data$post, result)
