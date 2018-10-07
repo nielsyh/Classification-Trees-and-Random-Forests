@@ -19,13 +19,10 @@ impurity <- function(data = c()) {
 
 #Description: calculates impurity reduction using the gini-index method. 
 impurity_reduction <- function(orig = c(), uno = c(), dos = c()) {
-
     l <- length(orig)
     l_uno <- length(uno)
     l_dos <- length(dos)
-
     res <- impurity(orig) - ((l_uno / l) * impurity(uno) + (l_dos / l) * impurity(dos))
-
     return(res)
 }
 
@@ -49,6 +46,7 @@ bestsplit <- function(num_data = c(), class_data = c()) {
             best <- i
         }
     }
+
     return(best)
 }
 
@@ -146,10 +144,10 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 
     for (i in 1:m) {
         df = merge(x, y)
-        sample = df[sample(replace = TRUE, nrow(df), nrow(df) * 0.3),]
-        label <- sample$y
-        sample$y = NULL
-        iTree = tree.grow(sample, label, nmin, minleaf, nfeat)
+        s = sample(df, nrow(df), replace = TRUE)
+        label <- s$y
+        s$y = NULL
+        iTree = tree.grow(s, label, nmin, minleaf, nfeat)
         result[[i]] <- iTree
     }
 
@@ -163,6 +161,7 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
 #  2. trees = the grown classification tree roots
 tree.classify.bag <- function(input, trees) {
     c <- 0
+    agg <- c()
 
     for (index in 1:nrow(input)) {
         row <- input[index,];
@@ -395,19 +394,6 @@ test_data <- clean_csv(test_data, v)
 
 #this is our built tree
 
-
-#train_data$post = NULL
-
-#tree <- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
-
-##print(tree.classify(train_data, tree.grow(train_data, label, nfeat = 41, minleaf = 5, nmin = 15)))
-#trees <- tree.grow.bag(train_data, as.numeric(label >= 1), m = 1, minleaf = 2, nmin = 2)
-#print('f')
-#result <- tree.classify.bag(train_data, trees)
-
-##train_data$post = as.numeric(label >= 1)
-#getConfusionMatrix(label, result)
-
 train_labels = train_data$post
 train_data$post = NULL
 
@@ -415,6 +401,6 @@ test_labels <- test_data$post
 test_data$post = NULL
 
 
-trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 10)
+trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 1  )
 pr <- tree.classify.bag(test_data, trees)
 getConfusionMatrix(test_labels, pr)
