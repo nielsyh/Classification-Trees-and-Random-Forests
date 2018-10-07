@@ -127,7 +127,6 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(dat
         x <- sample
     }
 
-
     # Create the tree's root node.
     root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
@@ -145,7 +144,7 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(dat
 #  4. minleaf - minimum number of leafs a node should have
 #  5. nfeat = Number of features to sample.
 #  5. m = number of trees to be used in the bagging
-tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(data)) - 1, m) {
+tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x)) - 1, m) {
     result <- list()
 
     for (i in 1:m) {
@@ -380,8 +379,8 @@ label <- train_data$post
 train_data$post = NULL
 
 tree<- tree.grow(train_data, label, minleaf = 5, nmin = 15, nfeat = 41)
-
 trees <- tree.grow.bag(train_data, label, m = 5, minleaf = 5, nmin = 15)
+
 result <- tree.classify.bag(test_data, trees)
 cols <- ncol(test_data)
 
