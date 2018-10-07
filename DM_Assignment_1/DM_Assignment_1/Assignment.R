@@ -145,6 +145,7 @@ tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol
         label <- s$y
         s$y = NULL
         iTree = tree.grow(s, label, nmin, minleaf, nfeat)
+        print(iTree)
         result[[i]] <- iTree
     }
 
@@ -261,8 +262,6 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
       sample <- node.data[, sample.random.columns(train_data, nfeat)]
       node.sample <- sample
     }
-  
-    
     
     node.classification <- node$y
 
@@ -393,26 +392,43 @@ getConfusionMatrix <- function(true_data, train_data) {
     return(matrix)
 }
 
-#fake data input
-train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE, sep = ";")
-test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE, sep = ";")
-v <- 0
-
-v[[1]] = 1
-v[[2]] = 2
-
-train_data <- clean_csv(train_data, v)
-test_data <- clean_csv(test_data, v)
 
 #this is our built tree
 
-train_labels = train_data$post
-train_data$post = NULL
+eclipse <- function() {
+    #fake data input
+    train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE, sep = ";")
+    test_data <- read.csv('C://dm//eclipse-metrics-packages-3.0.csv', header = TRUE, sep = ";")
+    v <- 0
 
-test_labels <- test_data$post
-test_data$post = NULL
+    v[[1]] = 1
+    v[[2]] = 2
+
+    train_data <- clean_csv(train_data, v)
+    test_data <- clean_csv(test_data, v)
+
+    train_labels = train_data$post
+    train_data$post = NULL
+
+    test_labels <- test_data$post
+    test_data$post = NULL
 
 
-trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 1  )
-pr <- tree.classify.bag(test_data, trees)
-getConfusionMatrix(test_labels, pr)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 1)
+    pr <- tree.classify.bag(test_data, trees)
+    getConfusionMatrix(test_labels, pr)
+}
+
+
+indians <- function() {
+    train_data <- read.csv('C://data.csv')
+    train_labels = train_data[,9]
+    train_data[,9] = NULL
+
+    trees <- tree.grow(train_data, train_labels)
+    print(trees)
+    pr <- tree.classify.bag(train_data, trees)
+    getConfusionMatrix(train_labels, pr)
+}
+
+indians()
