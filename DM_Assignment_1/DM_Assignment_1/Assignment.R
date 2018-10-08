@@ -239,7 +239,9 @@ tree.majority <- function(node) {
     }
 
     total = agg / height
-
+    print(total)
+    print(agg)
+    print(height)
     if (total <= 0.5) return(0)
 
     return(1)
@@ -268,6 +270,7 @@ tree.traverse <- function(row, currentNode) {
 #recursive function to build a tree.
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     node.data <- node$x
+    node.sample<- node$x
 
     if (nfeat < (ncol(node.data))) {
         sample <- node.data[, sample.random.columns(node.data, nfeat)]
@@ -300,7 +303,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
 
     #skip first and last column ATLEAST FOR TEST DATA..
     #for (col in 1:(ncol(node.data) - 1)) {
-    for (col in 2:(ncol(node.sample))) {
+    for (col in (ncol(node.sample))) {
 
         #only split when there is more then 1 unique data value, otherwise there is no posssible split.
         if (length(unique(node.sample[, col])) > 1) {
@@ -438,12 +441,12 @@ eclipse <- function() {
 
 
 indians <- function() {
-    train_data <- read.csv('C://data.csv')
+    train_data <- read.csv('C://dm/data.csv')
 
     train_labels = train_data[, 9]
     train_data[, 9] = NULL
 
-    trees <- tree.grow(train_data, train_labels)
+    tree <- tree.grow(train_data, train_labels)
     pr <- tree.classify(train_data, trees)
 
     getConfusionMatrix(train_labels, pr)
