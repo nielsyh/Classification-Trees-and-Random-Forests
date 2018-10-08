@@ -272,12 +272,12 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     node.data <- node$x
     node.sample<- node$x
 
-    if (nfeat < (ncol(node.data))) {
-        sample <- node.data[, sample.random.columns(node.data, nfeat)]
-        node.sample <- sample
-    } else {
-        node.sample = node.data
-    }
+    #f (nfeat < (ncol(node.data))) {
+    #   sample <- node.data[, sample.random.columns(node.data, nfeat)]
+     #  node.sample <- sample
+    # else {
+    #   node.sample = node.data
+    #
 
     node.classification <- node$y
 
@@ -292,7 +292,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
         return(node)
     }
 
-    if (ncol(node.data) < minleaf) {
+    if (nrow(node.data) < minleaf) {
         return(node)
     }
 
@@ -447,7 +447,7 @@ indians <- function() {
     train_data[, 9] = NULL
 
     tree <- tree.grow(train_data, train_labels)
-    pr <- tree.classify(train_data, trees)
+    pr <- tree.classify(train_data, tree)
 
     getConfusionMatrix(train_labels, pr)
 }
