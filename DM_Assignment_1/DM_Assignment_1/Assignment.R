@@ -194,8 +194,6 @@ tree.majorityVote <- function(predictions) {
     zeros = 0
     ones = 0
 
-    print(predictions)
-
     for (i in predictions) {
 
         if (i == 1) {
@@ -224,6 +222,7 @@ tree.majorityVote <- function(predictions) {
 tree.majority <- function(node) {
     height = nrow(node$x)
     classes = node$y
+
     agg = 0.0
 
     for (i in classes) {
@@ -239,9 +238,6 @@ tree.majority <- function(node) {
     }
 
     total = agg / height
-    print(total)
-    print(agg)
-    print(height)
     if (total <= 0.5) return(0)
 
     return(1)
@@ -249,7 +245,6 @@ tree.majority <- function(node) {
 
 tree.traverse <- function(row, currentNode) {
     ch = length(currentNode$children)
-
     if (ch == 0) {
         return(tree.majority(currentNode))
     }
@@ -269,6 +264,7 @@ tree.traverse <- function(row, currentNode) {
 
 #recursive function to build a tree.
 tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
+
     node.data <- node$x
     node.sample<- node$x
 
@@ -433,7 +429,7 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 2)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 10)
     pr <- tree.classify.bag(test_data, trees)
 
     getConfusionMatrix(test_labels, pr)
@@ -441,16 +437,18 @@ eclipse <- function() {
 
 
 indians <- function() {
-    train_data <- read.csv('C://dm/data.csv')
+    train_data <- read.csv('C://data.csv')
 
     train_labels = train_data[, 9]
     train_data[, 9] = NULL
 
     tree <- tree.grow(train_data, train_labels)
-    pr <- tree.classify(train_data, trees)
+    pr <- tree.classify(train_data, tree)
+
+    print(pr)
 
     getConfusionMatrix(train_labels, pr)
 }
 
-#indians()
-eclipse()
+indians()
+#eclipse()
