@@ -123,7 +123,7 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))
     # Create the tree's root node.
     root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
-    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat, x)
+    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat)
 
     return(tree)
 }
@@ -165,7 +165,7 @@ tree.classify.bag <- function(input, trees) {
 
     for (index in 1:nrow(input)) {
         row <- input[index,];
-        r = list()
+        r <- 0
 
         n <- 1
 
@@ -190,24 +190,31 @@ tree.classify.bag <- function(input, trees) {
 # Arguments:
 # 1. predictions = a set of 0,1 predictions
 tree.majorityVote <- function(predictions) {
+
     zeros = 0
     ones = 0
+
+    print(predictions)
+
     for (i in predictions) {
+
         if (i == 1) {
             ones = ones + 1
         }
         else {
             zeros = zeros + 1
         }
+
     }
+
     if (zeros > ones) return(0)
     if (ones > zeros) return(1)
 
     #if they're equal, we must choose one randomly
     rand <- sample(1:100, 1)
 
-    if (rand <= 50) return(0)
-    else return(1)
+    if (rand <= 50) return(1)
+    else return(0)
 }
 
 # Description: 
@@ -221,11 +228,13 @@ tree.majority <- function(node) {
 
     for (i in classes) {
         for (l in i) {
+
             final <- 0
             if (l >= 1) {
                 final <- 1
             }
             agg = agg + final
+
         }
     }
 
@@ -257,14 +266,14 @@ tree.traverse <- function(row, currentNode) {
 }
 
 #recursive function to build a tree.
-tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat, columns) {
+tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     node.data <- node$x
 
     if (nfeat < (ncol(node.data))) {
-    sample <- node.data[, sample.random.columns(columns, nfeat)]
-    node.sample <- sample
+        sample <- node.data[, sample.random.columns(node.data, nfeat)]
+        node.sample <- sample
     } else {
-    node.sample = node.data
+        node.sample = node.data
     }
 
     node.classification <- node$y
@@ -333,8 +342,8 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat, columns) {
     node$split_val = split.value
 
     #recurse
-    tree.grow.rec(leftChild, nmin, minleaf, nfeat, columns)
-    tree.grow.rec(rightChild, nmin, minleaf, nfeat, columns)
+    tree.grow.rec(leftChild, nmin, minleaf, nfeat)
+    tree.grow.rec(rightChild, nmin, minleaf, nfeat)
 
     #add children to parent
     node$AddChildNode(leftChild)
@@ -421,7 +430,7 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 10)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 2)
     pr <- tree.classify.bag(test_data, trees)
 
     getConfusionMatrix(test_labels, pr)
@@ -434,8 +443,8 @@ indians <- function() {
     train_labels = train_data[, 9]
     train_data[, 9] = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, m = 1)
-    pr <- tree.classify.bag(train_data, trees)
+    trees <- tree.grow(train_data, train_labels)
+    pr <- tree.classify(train_data, trees)
 
     getConfusionMatrix(train_labels, pr)
 }
