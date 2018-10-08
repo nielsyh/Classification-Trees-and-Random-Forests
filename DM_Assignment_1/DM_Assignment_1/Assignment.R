@@ -69,9 +69,11 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
     }
 
     node <- Node$new()
+
     node$type <- node.type
     node$val <- node.val
     node$name <- node.label
+
     node$x <- x
     node$y <- y
 
@@ -117,11 +119,11 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))
         stop("Cannot take a sample larger than the population.")
     }
 
-    
+
     # Create the tree's root node.
     root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
     # Recurse on root node.
-    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat)
+    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat, x)
 
     return(tree)
 }
@@ -137,15 +139,15 @@ tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))
 #  5. nfeat = Number of features to sample.
 #  5. m = number of trees to be used in the bagging
 tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x)) - 1, m) {
+
     result <- list()
+    merged <- data.frame(x, y)
 
     for (i in 1:m) {
-        df = merge(x, y)
-        s = sample(df, nrow(df), replace = TRUE)
-        label <- s$y
-        s$y = NULL
-        iTree = tree.grow(s, label, nmin, minleaf, nfeat)
-        print(iTree)
+        xy <- merged[sample(nrow(merged),nrow(merged), replace = TRUE),]
+        labels <- xy$y
+        xy$y = NULL
+        iTree = tree.grow(xy, labels, nmin, minleaf, nfeat)
         result[[i]] <- iTree
     }
 
@@ -255,16 +257,16 @@ tree.traverse <- function(row, currentNode) {
 }
 
 #recursive function to build a tree.
-tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
+tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat, columns) {
     node.data <- node$x
-    
+
     if (nfeat < (ncol(node.data))) {
-      sample <- node.data[, sample.random.columns(train_data, nfeat)]
-      node.sample <- sample
-    }else{
-      node.sample <- node.data
+    sample <- node.data[, sample.random.columns(columns, nfeat)]
+    node.sample <- sample
+    } else {
+    node.sample = node.data
     }
-    
+
     node.classification <- node$y
 
     if (is.null(node.data)) {
@@ -322,15 +324,17 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
 
     #make right and left children
     #node$x[split.col,2]
-    leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value, x = node.data[node.sample[, split.col] <= split.value,], y = node.classification[node.sample[, split.col] <= split.value])
-    rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value, x = node.data[node.sample[, split.col] > split.value,], y = node.classification[node.sample[, split.col] > split.value])
+    leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value,
+                             x = node.data[node.sample[, split.col] <= split.value,], y = node.classification[node.sample[, split.col] <= split.value])
+    rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value,
+                              x = node.data[node.sample[, split.col] > split.value,], y = node.classification[node.sample[, split.col] > split.value])
 
     node$split_col = split.col
     node$split_val = split.value
 
     #recurse
-    tree.grow.rec(leftChild, nmin, minleaf, nfeat)
-    tree.grow.rec(rightChild, nmin, minleaf, nfeat)
+    tree.grow.rec(leftChild, nmin, minleaf, nfeat, columns)
+    tree.grow.rec(rightChild, nmin, minleaf, nfeat, columns)
 
     #add children to parent
     node$AddChildNode(leftChild)
@@ -340,10 +344,10 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
 }
 
 
-sample.random <- function(x, n){
-  index <- sample.random.columns(x,n)
-  return()
-  
+sample.random <- function(x, n) {
+    index <- sample.random.columns(x, n)
+    return()
+
 }
 
 sample.random.columns <- function(x, n) {
@@ -415,22 +419,23 @@ eclipse <- function() {
     test_labels <- test_data$post
     test_data$post = NULL
 
-
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 1)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
     pr <- tree.classify.bag(test_data, trees)
     getConfusionMatrix(test_labels, pr)
 }
 
 
 indians <- function() {
-    train_data <- read.csv('C://dm/data.csv')
-    train_labels = train_data[,9]
-    train_data[,9] = NULL
+    train_data <- read.csv('C://data.csv')
 
-    trees <- tree.grow(train_data, train_labels)
-    print(trees)
+    train_labels = train_data[, 9]
+    train_data[, 9] = NULL
+
+    trees <- tree.grow.bag(train_data, train_labels, m = 1)
     pr <- tree.classify.bag(train_data, trees)
+
     getConfusionMatrix(train_labels, pr)
 }
 
-indians()
+#indians()
+eclipse()
