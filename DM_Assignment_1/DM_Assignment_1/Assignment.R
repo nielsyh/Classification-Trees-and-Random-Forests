@@ -413,14 +413,17 @@ eclipse <- function() {
     train_data <- clean_csv(train_data, v)
     test_data <- clean_csv(test_data, v)
 
-    train_labels = train_data$post
+    train_labels <- train_data$post
+    train_labels <- as.numeric(train_data$post > 0)
+
     train_data$post = NULL
 
-    test_labels <- test_data$post
+    test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 10)
     pr <- tree.classify.bag(test_data, trees)
+
     getConfusionMatrix(test_labels, pr)
 }
 
