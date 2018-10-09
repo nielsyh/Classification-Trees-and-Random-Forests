@@ -239,6 +239,7 @@ tree.majority <- function(node) {
     return(1)
 }
 
+#TODO HRISTO
 tree.traverse <- function(row, currentNode) {
     ch = length(currentNode$children)
 
@@ -311,7 +312,6 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
             #arg1 all classification data
             #arg2 first half classification data
             #arg3 seconds half classification data
-            #reduction.total <- impurity_reduction(node.data[, ncol(node.data)], node.data[, ncol(node.data)][node.data[, col] > bs], node.data[, ncol(node.data)][node.data[, col] <= bs])
             reduction.total <- impurity_reduction(node.classification, node.classification[node.sample[, col] > bs], node.classification[node.sample[, col] <= bs])
 
             #check if this split is the best until now, if yes -> remember the split.
@@ -323,15 +323,12 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
         }
     }
     
-    #check if found split.
+    #check if found split if not return node.
     if (is.null(split.value)) {
         return(node)
     }
     
-
     #make right and left children
-    #node$x[split.col,2]
-    
     leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value,
                              x = node.data[node.sample[, split.col] <= split.value,], y = node.classification[node.sample[, split.col] <= split.value])
     rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value,
@@ -353,13 +350,9 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     return(node)
 }
 
-
-sample.random <- function(x, n) {
-    index <- sample.random.columns(x, n)
-    return()
-
-}
-
+#Function to sample random coulms
+#arg1 x, this is the data with all the columns.
+#arg2 n, number of comns you want to sample.
 sample.random.columns <- function(x, n) {
     if (n == ncol(x)) {
         return(sort(c(1:ncol(x)), decreasing = FALSE))
@@ -384,7 +377,9 @@ tree.classify <- function(x = c(), tr) {
     return(l)
 }
 
-
+#Removes the columns marked to be dropped
+#arg1: csvFile 
+#arg2: dropped, index of columns to be dropped
 clean_csv <- function(csvFile, dropped) {
     for (i in dropped) {
         csvFile[, i] = NULL;
@@ -442,11 +437,11 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    #trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
-    #pr <- tree.classify.bag(test_data, trees)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
+    predictions <- tree.classify.bag(test_data, trees)
     
-    tree <- tree.grow(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41)
-    predictions <-tree.classify(test_data, tree)
+    #tree <- tree.grow(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41)
+    #predictions <-tree.classify(test_data, tree)
 
     measurements(test_labels, predictions)
 }
