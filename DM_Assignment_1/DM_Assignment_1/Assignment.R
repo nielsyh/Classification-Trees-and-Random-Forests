@@ -3,6 +3,117 @@ if (!require("data.tree")) {
     library(data.tree)
 }
 
+
+# Description:  Grow a classification tree
+# Returns: A classification tree
+#  Arguments:
+#  1. x: The data to split
+#  2. y: labels that fit to x.
+#  3. nmin - minimum amount of rows needed to split.
+#  4. minleaf - minimum number of leafs a node should have
+#  5. nfeat = Number of features to sample.
+tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))) {
+  #first some checks
+  if (is.null(x)) {
+    stop("Feature table cannot be empty or null")
+  }
+  
+  if (is.null(x)) {
+    stop("Class label cannot be empty or null")
+  }
+  
+  if (minleaf < 1) {
+    stop("Must have at least 2 observations on a leaf node")
+  }
+  
+  if (nmin <= 0) {
+    stop("Minimum number of observations for a node has to be positive")
+  }
+  
+  if (nfeat > ncol(x)) {
+    stop("Cannot take a sample larger than the population.")
+  }
+  
+  # Create the tree's root node.
+  root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
+  # Recurse on root node.
+  tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat)
+  
+  return(tree)
+}
+
+# Here x is a data matrix containing the attribute values of the cases for
+# which predictions are required, and tr is a tree object created
+# with the function tree.grow
+tree.classify <- function(x = c(), tr) {
+  
+  y <- 0
+  l <- 0
+  
+  for (index in 1:nrow(x)) {
+    row = x[index,];
+    result = tree.traverse(row, tr)
+    l[[index]] <- result
+  }
+  
+  return(l)
+}
+
+# Description:  Grow a classification tree
+# Returns: A classification tree
+#  Arguments:
+#  1. x: The data to split
+#  2. y: labels that fit to x.
+#  3. nmin - minimum amount of rows needed to split.
+#  4. minleaf - minimum number of leafs a node should have
+#  5. nfeat = Number of features to sample.
+#  5. m = number of trees to be used in the bagging
+tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x)) - 1, m) {
+  
+  result <- list()
+  merged <- data.frame(x, y)
+  
+  for (i in 1:m) {
+    xy <- merged[sample(nrow(merged),nrow(merged), replace = TRUE),]
+    labels <- xy$y
+    xy$y = NULL
+    iTree = tree.grow(xy, labels, nmin, minleaf, nfeat)
+    result[[i]] <- iTree
+  }
+  
+  return(result)
+}
+
+# Description:  Classify using the provided trees and take the majority vote result of the trees
+# Returns: A prediction for each sample
+#  Arguments:
+#  1. input = the input data
+#  2. trees = the grown classification tree roots
+tree.classify.bag <- function(input, trees) {
+  c <- 0
+  agg <- c()
+  
+  for (index in 1:nrow(input)) {
+    row <- input[index,];
+    r <- 0
+    
+    n <- 1
+    
+    for (tree in trees) {
+      mat = matrix(row, ncol = length(row))
+      class <- tree.classify(mat, tree)
+      class_result <- class[[1]]
+      r[[n]] = class_result
+      n <- n + 1
+    }
+    
+    result_class = tree.majorityVote(r)
+    c[[index]] = result_class
+  }
+  
+  return(c)
+}
+
 #calcs impurity for a given node (1).
 impurity <- function(data = c()) {
     l <- length(data)
@@ -83,102 +194,6 @@ node.create <- function(node.label = "", node.type = "left", type = "binary", no
 
     return(node)
 }
-
-# Description:  Grow a classification tree
-# Returns: A classification tree
-#  Arguments:
-#  1. x: The data to split
-#  2. y: labels that fit to x.
-#  3. nmin - minimum amount of rows needed to split.
-#  4. minleaf - minimum number of leafs a node should have
-#  5. nfeat = Number of features to sample.
-tree.grow <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x))) {
-
-    if (is.null(x)) {
-        stop("Feature table cannot be empty or null")
-    }
-
-    if (is.null(x)) {
-        stop("Class label cannot be empty or null")
-    }
-
-    if (minleaf < 1) {
-        stop("Must have at least 2 observations on a leaf node")
-    }
-
-    if (nmin <= 0) {
-        stop("Minimum number of observations for a node has to be positive")
-    }
-
-    if (nfeat > ncol(x)) {
-        stop("Cannot take a sample larger than the population.")
-    }
-
-
-    # Create the tree's root node.
-    root <- node.create(node.label = "Root Node", node.type = "root", node.val = 0, x = x, y = y)
-    # Recurse on root node.
-    tree <- tree.grow.rec(root, nmin = nmin, minleaf = minleaf, nfeat)
-
-    return(tree)
-}
-
-
-# Description:  Grow a classification tree
-# Returns: A classification tree
-#  Arguments:
-#  1. x: The data to split
-#  2. y: labels that fit to x.
-#  3. nmin - minimum amount of rows needed to split.
-#  4. minleaf - minimum number of leafs a node should have
-#  5. nfeat = Number of features to sample.
-#  5. m = number of trees to be used in the bagging
-tree.grow.bag <- function(x = c(), y = c(), nmin = 2, minleaf = 2, nfeat = (ncol(x)) - 1, m) {
-
-    result <- list()
-    merged <- data.frame(x, y)
-
-    for (i in 1:m) {
-        xy <- merged[sample(nrow(merged),nrow(merged), replace = TRUE),]
-        labels <- xy$y
-        xy$y = NULL
-        iTree = tree.grow(xy, labels, nmin, minleaf, nfeat)
-        result[[i]] <- iTree
-    }
-
-    return(result)
-}
-
-# Description:  Classify using the provided trees and take the majority vote result of the trees
-# Returns: A prediction for each sample
-#  Arguments:
-#  1. input = the input data
-#  2. trees = the grown classification tree roots
-tree.classify.bag <- function(input, trees) {
-    c <- 0
-    agg <- c()
-
-    for (index in 1:nrow(input)) {
-        row <- input[index,];
-        r <- 0
-
-        n <- 1
-
-        for (tree in trees) {
-            mat = matrix(row, ncol = length(row))
-            class <- tree.classify(mat, tree)
-            class_result <- class[[1]]
-            r[[n]] = class_result
-            n <- n + 1
-        }
-
-        result_class = tree.majorityVote(r)
-        c[[index]] = result_class
-    }
-
-    return(c)
-}
-
 
 # Description: 
 # Returns: The majority class of the predictions argument
@@ -360,22 +375,7 @@ sample.random.columns <- function(x, n) {
     return(sort(c(sample(1:ncol(x), n, replace = F)), decreasing = FALSE))
 }
 
-# Here x is a data matrix containing the attribute values of the cases for
-# which predictions are required, and tr is a tree object created
-# with the function tree.grow
-tree.classify <- function(x = c(), tr) {
 
-    y <- 0
-    l <- 0
-
-    for (index in 1:nrow(x)) {
-        row = x[index,];
-        result = tree.traverse(row, tr)
-        l[[index]] <- result
-    }
-
-    return(l)
-}
 
 #Removes the columns marked to be dropped
 #arg1: csvFile 
@@ -415,8 +415,7 @@ measurements <- function(observed, predicted){
 
 
 
-#this is our built tree
-
+#run test on eclipse dataset
 eclipse <- function() {
     #fake data input
     train_data <- read.csv('C://dm//eclipse-metrics-packages-2.0.csv', header = TRUE, sep = ";")
@@ -437,7 +436,7 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 6, m = 100)
     predictions <- tree.classify.bag(test_data, trees)
     
     #tree <- tree.grow(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41)
@@ -446,7 +445,7 @@ eclipse <- function() {
     measurements(test_labels, predictions)
 }
 
-
+#run test on indian
 indians <- function() {
     train_data <- read.csv('C://dm/data.csv')
 
