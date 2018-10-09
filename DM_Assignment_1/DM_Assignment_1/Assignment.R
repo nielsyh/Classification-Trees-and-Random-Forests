@@ -402,19 +402,20 @@ measurements <- function(observed, predicted){
   
   cm <- as.matrix(table(observed, predicted))
   precision <- ((cm[2,2]) / (cm[2,2] + cm[1,2])) * 100
-  accuracy <- (cm[1,1] +cm[2,2]) / (cm[1,1] + cm[1,2] + cm[2,1] + cm[2,2]) 
+  accuracy <- (cm[1,1] +cm[2,2]) / (cm[1,1] + cm[1,2] + cm[2,1] + cm[2,2])
+  recall<-((cm[2,2]) / (cm[2,2] + cm[2,1]))
   
   print('------')
   print('confusion matrix: ')
   print(cm)
-  
   print('------')
+  
   print('Precision: ')
   print(precision)
-  
-  print('------')
   print('Accuracy: ')
   print(accuracy)
+  print('Recall: ')
+  print(recall)
 }
 
 
@@ -441,10 +442,13 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
-    pr <- tree.classify.bag(test_data, trees)
+    #trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
+    #pr <- tree.classify.bag(test_data, trees)
+    
+    tree <- tree.grow(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41)
+    predictions <-tree.classify(test_data, tree)
 
-    getConfusionMatrix(test_labels, pr)
+    measurements(test_labels, predictions)
 }
 
 
