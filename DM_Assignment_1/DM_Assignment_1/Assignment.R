@@ -457,8 +457,8 @@ indians <- function() {
     tree <- tree.grow(x = train_data, y =train_labels, minleaf = 2, nmin = 2, nfeat = 5)
     pr <- tree.classify(train_data, tree)
 
-    getConfusionMatrix(train_labels, pr)
+    measurements(train_labels, pr)
 }
 
-#indians()
+indians()
 eclipse()
