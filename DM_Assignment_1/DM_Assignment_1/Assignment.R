@@ -132,10 +132,13 @@ impurity_reduction <- function(orig = c(), uno = c(), dos = c()) {
     return(res)
 }
 
-#returns bestsplit, tested on income. numeric data -> data to be slit, class_data -> classification of the numeric data. 
+#name: bestsplit
+#Arg num_data: list of numeric data (a row of a column),
+#Arg class_data: list of binary data (classification labels of num_data)
+#returns: The best value of a split in num_data, numeric.
+#description: Calculates all impurity reductions for all possible plits, then returns the value of the split with the greatest impurity reduction.
 bestsplit <- function(num_data = c(), class_data = c()) {
     # sort numbers 
-
     num_sorted <- sort(unique(num_data))
 
     # find all split points => halfway
@@ -436,7 +439,7 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 6, m = 100)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
     predictions <- tree.classify.bag(test_data, trees)
     
     #tree <- tree.grow(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41)
@@ -445,7 +448,7 @@ eclipse <- function() {
     measurements(test_labels, predictions)
 }
 
-#run test on indian
+#run test on indian dataset
 indians <- function() {
     train_data <- read.csv('C://dm/data.csv')
 
