@@ -3,11 +3,6 @@ if (!require("data.tree")) {
     library(data.tree)
 }
 
-if (!require("caret")) {
-    install.packages("caret", dependencies = TRUE)
-    library(caret)
-}
-
 #calcs impurity for a given node (1).
 impurity <- function(data = c()) {
     l <- length(data)
@@ -194,7 +189,7 @@ tree.majorityVote <- function(predictions) {
     zeros = 0
     ones = 0
 
-    print(predictions)
+    #print(predictions)
 
     for (i in predictions) {
 
@@ -239,9 +234,6 @@ tree.majority <- function(node) {
     }
 
     total = agg / height
-    print(total)
-    print(agg)
-    print(height)
     if (total <= 0.5) return(0)
 
     return(1)
@@ -272,12 +264,13 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
     node.data <- node$x
     node.sample<- node$x
 
-    #f (nfeat < (ncol(node.data))) {
-    #   sample <- node.data[, sample.random.columns(node.data, nfeat)]
-     #  node.sample <- sample
-    # else {
-    #   node.sample = node.data
-    #
+    if (nfeat < (ncol(node.data))) {
+       sample <- node.data[, sample.random.columns(node.data, nfeat)]
+       node.sample <- sample
+    }
+     else {
+        node.sample = node.data
+     }
 
     node.classification <- node$y
 
@@ -285,6 +278,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
         return(node)
     }
     if (nrow(node.data) < nmin) {
+
         return(node)
     }
     #if (impurity(node.data[, ncol(node.data)]) == 0) {
@@ -303,7 +297,7 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
 
     #skip first and last column ATLEAST FOR TEST DATA..
     #for (col in 1:(ncol(node.data) - 1)) {
-    for (col in (ncol(node.sample))) {
+    for (col in (1:ncol(node.sample))) {
 
         #only split when there is more then 1 unique data value, otherwise there is no posssible split.
         if (length(unique(node.sample[, col])) > 1) {
@@ -328,19 +322,23 @@ tree.grow.rec <- function(node = NULL, nmin = 2, minleaf = 2, nfeat) {
             }
         }
     }
-
+    
     #check if found split.
     if (is.null(split.value)) {
         return(node)
     }
+    
 
     #make right and left children
     #node$x[split.col,2]
+    
     leftChild <- node.create(node.label = 'n', node.type = "left", node.val = split.value,
                              x = node.data[node.sample[, split.col] <= split.value,], y = node.classification[node.sample[, split.col] <= split.value])
     rightChild <- node.create(node.label = 'n', node.type = "right", node.val = split.value,
                               x = node.data[node.sample[, split.col] > split.value,], y = node.classification[node.sample[, split.col] > split.value])
-
+    
+    #found column in samle data, find which column that is in the real data:
+    split.col <- which( colnames(node.data)==colnames(node.sample[split.col]))
     node$split_col = split.col
     node$split_val = split.value
 
@@ -394,21 +392,31 @@ clean_csv <- function(csvFile, dropped) {
     return(csvFile)
 }
 
-#returns condusion matrix
-#true_data is true data
-#train_data is train data
+#returns condusion matrix, Precision & accurcy
+#Observed is real labels
+#Predicted is data precicted by tree
 #example: getConfusionMatrix(data[,6], res)
-getConfusionMatrix <- function(true_data, train_data) {
-
-    true_data <- as.numeric(true_data > 0)
-    train_data <- as.numeric(train_data > 0)
-
-    u <- union(train_data, true_data)
-    t <- table(factor(train_data, u), factor(true_data, u))
-    matrix <- confusionMatrix(t)
-    print(matrix)
-    return(matrix)
+measurements <- function(observed, predicted){
+  #predicted <- factor(as.character(predicted), levels=unique(as.character(predicted)))
+  #observed  <- as.factor(observed)
+  
+  cm <- as.matrix(table(observed, predicted))
+  precision <- ((cm[2,2]) / (cm[2,2] + cm[1,2])) * 100
+  accuracy <- (cm[1,1] +cm[2,2]) / (cm[1,1] + cm[1,2] + cm[2,1] + cm[2,2]) 
+  
+  print('------')
+  print('confusion matrix: ')
+  print(cm)
+  
+  print('------')
+  print('Precision: ')
+  print(precision)
+  
+  print('------')
+  print('Accuracy: ')
+  print(accuracy)
 }
+
 
 
 #this is our built tree
@@ -433,7 +441,7 @@ eclipse <- function() {
     test_labels <- as.numeric(test_data$post > 0)
     test_data$post = NULL
 
-    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 2)
+    trees <- tree.grow.bag(train_data, train_labels, nmin = 15, minleaf = 5, nfeat = 41, m = 100)
     pr <- tree.classify.bag(test_data, trees)
 
     getConfusionMatrix(test_labels, pr)
@@ -446,7 +454,7 @@ indians <- function() {
     train_labels = train_data[, 9]
     train_data[, 9] = NULL
 
-    tree <- tree.grow(train_data, train_labels)
+    tree <- tree.grow(x = train_data, y =train_labels, minleaf = 2, nmin = 2, nfeat = 5)
     pr <- tree.classify(train_data, tree)
 
     getConfusionMatrix(train_labels, pr)
